@@ -1,6 +1,6 @@
 # Sherpa-ONNX Integration Plan
 
-**Status:** Initial Android and Windows/JVM offline ASR adapters have been added. Android source compilation passed CI run `44383261711`; Windows/JVM compilation and PCM tests are awaiting Windows CI validation. Physical-device ASR validation is pending.
+**Status:** Initial Android and Windows/JVM offline ASR adapters have been added. Android source compilation passed CI run `44383261711`; Windows/JVM compilation and PCM conversion tests passed run `44387376519`. Physical-device ASR validation is pending.
 
 ## Goal
 
@@ -24,8 +24,7 @@ Platform-specific code implements this contract. Sherpa-ONNX types remain out of
 - Windows/JVM: `WindowsAudioInput` uses Java Sound; `SherpaMoonshineSpeechRecognizer` uses the Sherpa JVM API and Windows x64 native libraries.
 - Both recognizers use the Spanish Moonshine v2 model from local files, CPU inference, bounded utterances, and a shared end-of-stream marker.
 - Native engine artifacts are pinned by SHA-256 and downloaded only during builds. No model is downloaded by the SDK, and no audio is uploaded.
-
-The Windows host JVM must be launched with `-Djava.library.path` set to the extracted Sherpa DLL directory. See [WINDOWS_ASR.md](WINDOWS_ASR.md).
+- Android compilation and Windows JVM adapter compilation/tests pass in GitHub Actions. Target-hardware tests remain pending.
 
 ## Proposed platform boundaries
 
@@ -73,8 +72,8 @@ A working ASR adapter does not implement the exact wake phrase `Oye Lisom`. Keyw
 
 ## Current limitations
 
-- Android has passed source compilation but not physical microphone/model validation.
-- Windows implementation and CI are in place, but the Windows CI result and target-hardware validation remain pending.
+- Android compilation has passed but physical microphone/model validation remains pending.
+- Windows x64 adapter compilation and PCM tests have passed; physical microphone capture and model inference remain pending.
 - Both ASR adapters currently decode complete utterances after push-to-talk ends; partial streaming transcripts are not produced.
 - No wake-word model, post-keyword speech handoff, offline TTS engine, or iOS native adapter is approved yet.
 - Sherpa engine and model licensing must be reviewed before redistribution.
