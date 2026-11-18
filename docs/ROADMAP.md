@@ -29,12 +29,17 @@
 - [ ] Validate Spanish recognition accuracy, latency, memory, and lifecycle offline.
 - [ ] Implement iOS only after a macOS/Xcode build host is available.
 
-## Phase 3 — Wake word
+## Phase 3 — Wake word (in progress)
 
-- [ ] Select or train a local "Oye Lisom" keyword model.
-- [ ] Integrate local keyword spotting.
+- [x] Select a provisional open-vocabulary Spanish KWS model candidate; exact "Oye Lisom" accuracy and licensing remain under review.
+- [x] Add Sherpa Zipformer keyword-spotter adapters for Android and Windows/JVM.
+- [x] Make wake-word confidence nullable when the engine provides no calibrated score.
+- [x] Add the raw "oye lisom" keyword definition and a Windows script to generate local BPE keyword tokens.
+- [x] Pass Android and Windows/JVM KWS adapter source compilation in CI run `44388881542`.
+- [ ] Validate exact "Oye Lisom" phrase detection on Peruvian Spanish voices and tune false-accept/false-reject thresholds.
 - [ ] Define bounded audio pre-roll and post-keyword handoff to ASR; the current event contract does not yet guarantee that speech immediately following the wake phrase is preserved.
-- [ ] Measure false accepts, false rejects, CPU and battery use.
+- [ ] Integrate the detector with the engine's single-owner microphone lifecycle.
+- [ ] Measure always-on CPU, memory, latency, false accepts, false rejects, and battery use.
 
 ## Phase 4 — NLU (in progress)
 
