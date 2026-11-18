@@ -83,7 +83,7 @@ class LisomAssistantEngine(
         }
     }
 
-    override suspend fun stopPushToTalk() {
+    override suspend fun stopPushToTalk() = lifecycleMutex.withLock {
         audioInput.stop()
         pushToTalkJob?.join()
         pushToTalkJob = null
@@ -143,7 +143,7 @@ class LisomAssistantEngine(
         }
     }
 
-    override suspend fun disableWakeWord() {
+    override suspend fun disableWakeWord() = lifecycleMutex.withLock {
         wakeWordJob?.cancelAndJoin()
         wakeWordJob = null
         runCatching { audioInput.stop() }
@@ -195,8 +195,12 @@ class LisomAssistantEngine(
     }
 
     private suspend fun ensureInitialized() {
-        if (!initialized) initialize()
         check(!released) { "Lisom Assistant has already been released." }
+        if (!initialized) {
+            check(config.offlineRequired) { "Online processing is not supported." }
+            initialized = true
+            mutableState.value = LisomAssistantState.Ready
+        }
     }
 
     private fun reportFailure(code: String, failure: Exception) {
