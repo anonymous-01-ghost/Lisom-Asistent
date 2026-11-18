@@ -10,9 +10,11 @@
 - [x] Verify NLU tests and JVM demo in GitHub Actions (run for commit `596ccecf41743c787b134d9ca6039fdeadf7c3b0`).
 - [ ] Add and verify Gradle wrapper files.
 
-## Phase 2 — Speech recognition
+## Phase 2 — Speech recognition (in progress)
 
-- [ ] Select and pin a Sherpa-ONNX release compatible with Android, JVM/Windows, and iOS.
+- [x] Evaluate and document sherpa-onnx v2.0.1 as a provisional engine candidate.
+- [x] Identify Moonshine Base Spanish quantized as the first ASR model candidate (license and device tests pending).
+- [ ] Validate one pinned engine build across Android, JVM/Windows, and iOS; iOS requires a macOS/Xcode build host.
 - [ ] Review native binary and model licences.
 - [ ] Implement 16 kHz mono audio capture on each platform.
 - [ ] Integrate a Spanish offline ASR model.
