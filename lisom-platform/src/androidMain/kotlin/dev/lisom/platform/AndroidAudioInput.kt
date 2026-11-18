@@ -32,7 +32,7 @@ import kotlin.math.max
 @OptIn(ExperimentalCoroutinesApi::class)
 class AndroidAudioInput(
     private val context: Context,
-) : AudioInput, AutoCloseable {
+) : AudioInput {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lifecycleMutex = Mutex()
     private val mutableFrames = MutableSharedFlow<PcmAudioFrame>(
@@ -133,7 +133,4 @@ class AndroidAudioInput(
         scope.cancel()
     }
 
-    override fun close() {
-        scope.cancel()
-    }
 }
