@@ -164,6 +164,14 @@ class LisomAssistantEngine(
         }
     }
 
+    override suspend fun stopSpeaking() {
+        if (released) return
+        speechSynthesizer?.stop()
+        if (!released && mutableState.value == LisomAssistantState.Speaking) {
+            mutableState.value = LisomAssistantState.Ready
+        }
+    }
+
     override suspend fun release() {
         lifecycleMutex.withLock {
             if (released) return@withLock
@@ -201,7 +209,7 @@ class LisomAssistantEngine(
         check(!released) { "Lisom Assistant has already been released." }
         if (!initialized) {
             check(config.offlineRequired) { "Online processing is not supported." }
-        checkLanguageSupport()
+            checkLanguageSupport()
             initialized = true
             mutableState.value = LisomAssistantState.Ready
         }
