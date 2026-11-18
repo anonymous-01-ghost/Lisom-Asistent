@@ -1,51 +1,68 @@
 # Lisom Assistant SDK
 
-**Status:** Initial development scaffold  
 **Version:** 0.1.0-SNAPSHOT  
-**Primary technology:** Kotlin Multiplatform  
-**Processing model:** Local and offline-only
+**Status:** Phase 1 foundation  
+**Technology:** Kotlin Multiplatform  
+**Runtime processing:** Local and offline-only
 
-Lisom Assistant is an embeddable, reusable voice-engine SDK. It provides speech recognition, wake-word detection, local command interpretation, and speech synthesis through a platform-neutral API.
+Lisom Assistant is an embeddable voice-engine SDK for applications that need local speech recognition, wake-word activation, command interpretation, and spoken responses.
 
-This repository contains **Lisom Assistant only**. It does not contain Lynox Music, a music player, a music catalogue, provider integrations, backend services, or cloud infrastructure.
+> This repository is exclusively Lisom Assistant. Lynox Music and all other host applications remain separate projects.
 
-## Product constraints
+## Non-negotiable product rules
 
-- All speech processing and command interpretation must run locally.
-- No remote speech, language, or text-to-speech APIs.
-- No server, account, subscription, or mandatory network dependency.
-- Push-to-talk is supported as the first interaction mode.
-- The wake phrase is configurable, with **Oye Lisom** as the default.
-- Public contracts are separated from platform-specific implementations.
-- The first supported platforms are Android, Windows (JVM), and iOS.
+- Speech recognition, wake-word detection, NLU, and TTS must execute locally.
+- No remote voice APIs, mandatory servers, accounts, subscriptions, or API keys.
+- Push-to-talk and the configurable wake phrase **Oye Lisom** are the supported activation modes.
+- The SDK emits typed commands. The host application owns its UI, media, catalogue, and command execution.
+- Shared logic stays separate from native Android, Windows/JVM, and iOS adapters.
 
-## Repository modules
+## Modules
 
 | Module | Responsibility |
 | --- | --- |
-| `lisom-api` | Public SDK contracts and configuration |
-| `lisom-models` | Commands, events, states, and shared data types |
+| `lisom-models` | Commands, assistant states, and shared value types |
+| `lisom-api` | Public SDK configuration and contracts |
 | `lisom-core` | Runtime lifecycle and orchestration |
-| `lisom-speech` | Offline automatic speech recognition abstraction |
-| `lisom-wakeword` | Local wake-word detection abstraction |
-| `lisom-nlu` | Local Spanish command interpretation |
-| `lisom-tts` | Offline speech synthesis abstraction |
-| `lisom-platform` | Android, Windows/JVM, and iOS adapters |
-| `lisom-testing` | Shared test utilities |
-| `lisom-demo` | Small developer sample; not a host product |
+| `lisom-speech` | Audio input and offline ASR contracts |
+| `lisom-wakeword` | Local keyword detection contract |
+| `lisom-nlu` | Deterministic Spanish command interpreter |
+| `lisom-tts` | Offline speech synthesis contract |
+| `lisom-platform` | Platform identification and native adapter boundary |
+| `lisom-testing` | Fakes for tests |
+| `lisom-demo` | Small JVM NLU demo; not a host application |
 
-## Development status
+## Implemented in this foundation
 
-The initial commit establishes the module layout, public contracts, a first rule-based Spanish command interpreter, and build configuration. It does not yet include microphone capture, Sherpa-ONNX bindings, a trained wake-word model, or a TTS engine. Those are implemented and validated in subsequent phases.
+- Multi-module Gradle project and version catalog.
+- Common command/state models and public API.
+- Offline-only configuration guard.
+- Audio, ASR, wake-word, and TTS interfaces.
+- Reference core coordinator with dependency injection.
+- Initial Spanish rule-based NLU and unit tests.
+- JVM command-line demo and CI workflow.
+
+## Not implemented yet
+
+No production microphone capture, Sherpa-ONNX binding, trained "Oye Lisom" model, VAD/endpointing engine, or offline TTS provider is included yet. Platform source sets currently identify the runtime but do not access the microphone. These features are next engineering phases, not capabilities being claimed as complete.
 
 ## Build requirements
 
-- JDK 17
-- Gradle 9.7
-- Android SDK 36 for Android compilation
-- macOS and Xcode for iOS compilation
+- JDK 17+
+- Gradle 9.7.0
+- Android SDK 36 for Android target builds
+- macOS with Xcode 26.4 for iOS native builds
 
-The project uses Kotlin 2.4.21 and the Android-KMP library plugin. See [Installation](docs/INSTALLATION.md) before building.
+The pinned combination is Kotlin 2.4.21 and Android Gradle Plugin 9.3.1. Gradle 9.7.0 is selected to stay within the published Kotlin Multiplatform compatibility range.
+
+## Run on Windows
+
+After cloning the private repository and installing JDK 17 and Gradle 9.7.0:
+
+```powershell
+gradle :lisom-nlu:jvmTest
+gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
+```
 
 ## Documentation
 
@@ -54,8 +71,8 @@ The project uses Kotlin 2.4.21 and the Android-KMP library plugin. See [Installa
 - [Installation](docs/INSTALLATION.md)
 - [Platform support](docs/PLATFORM_SUPPORT.md)
 - [Offline mode](docs/OFFLINE_MODE.md)
-- [Development roadmap](docs/ROADMAP.md)
+- [Roadmap](docs/ROADMAP.md)
 
-## License
+## Licensing
 
-No distribution license has been selected yet. Do not assume that the project or its future model assets are licensed for redistribution until the license review is completed.
+A distribution licence has not yet been selected. Model and native-engine licences will be reviewed before bundling or redistributing those assets.
