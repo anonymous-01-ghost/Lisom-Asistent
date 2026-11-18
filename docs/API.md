@@ -22,18 +22,35 @@ The host collects typed commands:
 lisom.commands.collect { recognized ->
     when (val command = recognized.command) {
         is LisomCommand.PlayArtist -> hostSearchAndPlay(command.artist)
+        is LisomCommand.PlayTrack -> hostPlayTrack(command.title, command.artist)
+        is LisomCommand.SearchMusic -> hostSearch(command.query)
+        is LisomCommand.SearchLyrics -> hostSearchLyrics(command.phrase)
+        is LisomCommand.SetVolume -> hostSetVolume(command.percent)
         LisomCommand.Pause -> hostPlayer.pause()
+        LisomCommand.Resume -> hostPlayer.play()
+        LisomCommand.Next -> hostPlayer.seekToNext()
+        LisomCommand.Previous -> hostPlayer.seekToPrevious()
         LisomCommand.ShowLyrics -> hostLyrics.show()
+        LisomCommand.HideLyrics -> hostLyrics.hide()
         else -> Unit
     }
 }
 ```
 
-The example describes the host-side responsibility; `hostSearchAndPlay`, `hostPlayer`, and `hostLyrics` belong to the integrating application and are not part of this repository.
+The example describes the host-side responsibility; `hostSearchAndPlay`, `hostPlayTrack`, `hostSearch`, `hostSearchLyrics`, `hostSetVolume`, `hostPlayer`, and `hostLyrics` belong to the integrating application and are not part of this repository.
 
 ## Command model
 
-The initial command types include music search, artist and track playback, playlist playback, pause, resume, next, previous, lyrics visibility, and volume adjustment. These are intents; Lisom does not perform media operations itself.
+The deterministic Spanish grammar currently recognizes:
+
+- Search music and artists.
+- Search a song by a phrase from its lyrics.
+- Play artists, tracks, and playlists.
+- Pause, resume, skip to next, and return to previous.
+- Show or hide lyrics.
+- Set playback volume from 0 to 100 percent.
+
+These are intents only. Lisom does not own a music catalogue, player, queue, lyrics database, or media provider. The host application maps each command to its own existing functionality.
 
 ## Stability
 
