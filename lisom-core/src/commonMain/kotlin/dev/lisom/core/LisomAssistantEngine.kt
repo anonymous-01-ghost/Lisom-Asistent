@@ -6,6 +6,7 @@ import dev.lisom.models.LisomAssistantState
 import dev.lisom.models.RecognizedCommand
 import dev.lisom.nlu.CommandInterpreter
 import dev.lisom.speech.AudioInput
+import dev.lisom.speech.PcmAudioFrame
 import dev.lisom.speech.SpeechRecognizer
 import dev.lisom.tts.SpeechSynthesizer
 import dev.lisom.wakeword.WakeWordDetector
@@ -15,12 +16,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Reference coordinator. Native audio capture and offline engines are injected by adapters.
@@ -36,7 +42,8 @@ class LisomAssistantEngine(
 ) : LisomAssistant {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val mutableState = MutableStateFlow< LisomAssistantState >(LisomAssistantState.Uninitialized)
+    private val lifecycleMutex = Mutex()
+    private val mutableState = kotlinx.coroutines.flow.MutableStateFlow< LisomAssistantState >(LisomAssistantState.Uninitialized)
     private val mutableCommands = MutableSharedFlow<RecognizedCommand>(extraBufferCapacity = 16)
 
     private var pushToTalkJob: Job? = null
@@ -47,15 +54,15 @@ class LisomAssistantEngine(
     override val state = mutableState.asStateFlow()
     override val commands = mutableCommands.asSharedFlow()
 
-    override suspend fun initialize() {
+    override suspend fun initialize() = lifecycleMutex.withLock {
         check(!released) { "Lisom Assistant has already been released." }
-        if (initialized) return
+        if (initialized) return@withLock
         check(config.offlineRequired) { "Online processing is not supported." }
         initialized = true
         mutableState.value = LisomAssistantState.Ready
     }
 
-    override suspend fun startPushToTalk() {
+    override suspend fun startPushToTalk() = lifecycleMutex.withLock {
         ensureInitialized()
         check(config.pushToTalkEnabled) { "Push-to-talk is disabled in this configuration." }
         check(wakeWordJob?.isActive != true && pushToTalkJob?.isActive != true) {
@@ -70,11 +77,7 @@ class LisomAssistantEngine(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
-                try {
-                    audioInput.stop()
-                } catch (_: Exception) {
-                    // Preserve the original recognition failure for the host app.
-                }
+                runCatching { audioInput.stop() }
                 reportFailure("speech_recognition_failed", failure)
             }
         }
@@ -87,42 +90,63 @@ class LisomAssistantEngine(
         if (!released && wakeWordJob?.isActive != true) mutableState.value = LisomAssistantState.Ready
     }
 
-    override suspend fun enableWakeWord() {
+    override suspend fun enableWakeWord() = lifecycleMutex.withLock {
         ensureInitialized()
         check(config.wakeWordEnabled) { "Wake-word activation is disabled in this configuration." }
         check(pushToTalkJob?.isActive != true) { "Push-to-talk is currently active." }
-        if (wakeWordJob?.isActive == true) return
+        if (wakeWordJob?.isActive == true) return@withLock
         val detector = requireNotNull(wakeWordDetector) {
             "No local wake-word detector has been installed."
         }
-        audioInput.start()
+
         mutableState.value = LisomAssistantState.Listening
         wakeWordJob = scope.launch {
             try {
-                detector.observe(audioInput.frames).collect {
-                    mutableState.value = LisomAssistantState.Processing
-                    val result = speechRecognizer.recognize(audioInput.frames)
-                    processTranscript(result.text, result.confidence)
-                    if (!released) mutableState.value = LisomAssistantState.Listening
+                while (currentCoroutineContext().isActive && !released) {
+                    val routedFrames = MutableSharedFlow<PcmAudioFrame>(
+                        // 16 x 100 ms frames preserve the wake phrase and a fast-following command.
+                        replay = WAKE_WORD_PREROLL_FRAMES,
+                        extraBufferCapacity = WAKE_WORD_PREROLL_FRAMES,
+                    )
+
+                    audioInput.start()
+                    val relayJob = scope.launch {
+                        audioInput.frames.collect { frame -> routedFrames.emit(frame) }
+                    }
+
+                    try {
+                        // first() stops the keyword detector as soon as one wake event is emitted.
+                        detector.observe(routedFrames).first()
+                        if (released || !currentCoroutineContext().isActive) break
+
+                        mutableState.value = LisomAssistantState.Processing
+                        val result = speechRecognizer.recognize(
+                            routedFrames.untilSpeechEndpoint(),
+                        )
+                        processTranscript(result.text, result.confidence)
+                    } finally {
+                        // One microphone owner: stop capture only after the ASR handoff finishes.
+                        runCatching { audioInput.stop() }
+                        relayJob.cancelAndJoin()
+                    }
+
+                    if (!released && currentCoroutineContext().isActive) {
+                        mutableState.value = LisomAssistantState.Listening
+                    }
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
-                try {
-                    audioInput.stop()
-                } catch (_: Exception) {
-                    // Preserve the original wake-word session failure.
-                }
+                runCatching { audioInput.stop() }
                 reportFailure("wake_word_session_failed", failure)
             }
         }
     }
 
     override suspend fun disableWakeWord() {
-        wakeWordJob?.cancel()
-        wakeWordJob?.join()
+        wakeWordJob?.cancelAndJoin()
         wakeWordJob = null
-        audioInput.stop()
+        runCatching { audioInput.stop() }
         if (!released) mutableState.value = LisomAssistantState.Ready
     }
 
@@ -141,15 +165,17 @@ class LisomAssistantEngine(
     }
 
     override suspend fun release() {
-        if (released) return
-        released = true
-        pushToTalkJob?.cancel()
-        wakeWordJob?.cancel()
-        audioInput.release()
-        speechRecognizer.release()
-        speechSynthesizer?.stop()
-        scope.cancel()
-        mutableState.value = LisomAssistantState.Closed
+        lifecycleMutex.withLock {
+            if (released) return@withLock
+            released = true
+            pushToTalkJob?.cancelAndJoin()
+            wakeWordJob?.cancelAndJoin()
+            audioInput.release()
+            speechRecognizer.release()
+            speechSynthesizer?.stop()
+            scope.cancel()
+            mutableState.value = LisomAssistantState.Closed
+        }
     }
 
     private suspend fun processTranscript(transcript: String, confidence: Float?) {
@@ -180,5 +206,9 @@ class LisomAssistantEngine(
                 message = failure.message ?: "Unexpected local processing error.",
             )
         }
+    }
+
+    private companion object {
+        const val WAKE_WORD_PREROLL_FRAMES = 16
     }
 }
