@@ -136,12 +136,13 @@ class LisomAssistantEngine(
         pushToTalkJob?.cancel()
         wakeWordJob?.cancel()
         audioInput.stop()
+        speechRecognizer.release()
         speechSynthesizer?.stop()
         scope.cancel()
         mutableState.value = LisomAssistantState.Closed
     }
 
-    private suspend fun processTranscript(transcript: String, confidence: Float) {
+    private suspend fun processTranscript(transcript: String, confidence: Float?) {
         mutableState.value = LisomAssistantState.Processing
         val interpretation = commandInterpreter.interpret(transcript)
         val command = interpretation.command
