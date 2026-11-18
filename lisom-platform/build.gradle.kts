@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.android.kmp)
 }
 
+val sherpaVersion = "2.0.1"
+val thirdPartyRepository = rootProject.layout.buildDirectory.dir("repository")
 val sherpaAar = layout.buildDirectory.file("third-party/sherpa-onnx-2.0.1.aar")
 val sherpaJvmJar = layout.buildDirectory.file("third-party/sherpa-onnx-jvm-2.0.1.jar")
 val sherpaWindowsNativeJar = layout.buildDirectory.file(
@@ -15,6 +17,15 @@ val sherpaWindowsNativeJar = layout.buildDirectory.file(
 val sherpaWindowsNativeDirectory = layout.buildDirectory.dir(
     "third-party/sherpa-onnx-win-x64",
 )
+val sherpaAndroidMavenDirectory = thirdPartyRepository.map {
+    it.dir("dev/lisom/thirdparty/sherpa-onnx-android/$sherpaVersion")
+}
+val sherpaJvmMavenDirectory = thirdPartyRepository.map {
+    it.dir("dev/lisom/thirdparty/sherpa-onnx-jvm/$sherpaVersion")
+}
+val sherpaWindowsNativeMavenDirectory = thirdPartyRepository.map {
+    it.dir("dev/lisom/thirdparty/sherpa-onnx-native-win-x64/$sherpaVersion")
+}
 
 fun downloadAndVerify(url: String, target: java.io.File, expectedSha256: String) {
     target.parentFile.mkdirs()
@@ -34,6 +45,43 @@ fun downloadAndVerify(url: String, target: java.io.File, expectedSha256: String)
     check(actualSha256 == expectedSha256) {
         "Sherpa-ONNX artifact SHA-256 mismatch. Expected $expectedSha256, got $actualSha256"
     }
+}
+
+fun publishThirdPartyModule(
+    source: java.io.File,
+    moduleDirectory: java.io.File,
+    groupId: String,
+    artifactId: String,
+    version: String,
+    extension: String,
+    dependencies: List<Pair<String, String>> = emptyList(),
+) {
+    moduleDirectory.mkdirs()
+    source.copyTo(
+        moduleDirectory.resolve(artifactId + "-" + version + "." + extension),
+        overwrite = true,
+    )
+    val dependencyXml = dependencies.joinToString("") { dependency ->
+        "<dependency>" +
+            "<groupId>" + dependency.first.substringBefore(':') + "</groupId>" +
+            "<artifactId>" + dependency.first.substringAfter(':') + "</artifactId>" +
+            "<version>" + dependency.second + "</version>" +
+            "</dependency>"
+    }
+    moduleDirectory.resolve(artifactId + "-" + version + ".pom").writeText(
+        "<?xml version="1.0" encoding="UTF-8"?>" +
+            "<project xmlns="http://maven.apache.org/POM/4.0.0" " +
+            "xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" " +
+            "xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 " +
+            "https://maven.apache.org/xsd/maven-4.0.0.xsd">" +
+            "<modelVersion>4.0.0</modelVersion>" +
+            "<groupId>" + groupId + "</groupId>" +
+            "<artifactId>" + artifactId + "</artifactId>" +
+            "<version>" + version + "</version>" +
+            "<packaging>" + extension + "</packaging>" +
+            "<dependencies>" + dependencyXml + "</dependencies>" +
+            "</project>",
+    )
 }
 
 val downloadSherpaAar by tasks.registering {
@@ -93,6 +141,47 @@ val prepareSherpaWindowsNativeRuntime by tasks.registering {
     }
 }
 
+val prepareSherpaAndroidMaven by tasks.registering {
+    dependsOn(downloadSherpaAar)
+    outputs.dir(sherpaAndroidMavenDirectory)
+    doLast {
+        publishThirdPartyModule(
+            source = sherpaAar.get().asFile,
+            moduleDirectory = sherpaAndroidMavenDirectory.get().asFile,
+            groupId = "dev.lisom.thirdparty",
+            artifactId = "sherpa-onnx-android",
+            version = sherpaVersion,
+            extension = "aar",
+        )
+    }
+}
+
+val prepareSherpaWindowsMaven by tasks.registering {
+    dependsOn(prepareSherpaWindowsNativeRuntime)
+    outputs.dirs(sherpaJvmMavenDirectory, sherpaWindowsNativeMavenDirectory)
+    doLast {
+        publishThirdPartyModule(
+            source = sherpaWindowsNativeJar.get().asFile,
+            moduleDirectory = sherpaWindowsNativeMavenDirectory.get().asFile,
+            groupId = "dev.lisom.thirdparty",
+            artifactId = "sherpa-onnx-native-win-x64",
+            version = sherpaVersion,
+            extension = "jar",
+        )
+        publishThirdPartyModule(
+            source = sherpaJvmJar.get().asFile,
+            moduleDirectory = sherpaJvmMavenDirectory.get().asFile,
+            groupId = "dev.lisom.thirdparty",
+            artifactId = "sherpa-onnx-jvm",
+            version = sherpaVersion,
+            extension = "jar",
+            dependencies = listOf(
+                "dev.lisom.thirdparty:sherpa-onnx-native-win-x64" to sherpaVersion,
+            ),
+        )
+    }
+}
+
 kotlin {
     android {
         namespace = "dev.lisom.platform"
@@ -111,12 +200,13 @@ kotlin {
             implementation(project(":lisom-tts"))
         }
         androidMain.dependencies {
-            // Build-time download only; ASR inference and model loading are fully local.
-            implementation(files(sherpaAar))
+            // The AAR is exposed as a Maven module so published SDK AARs have a valid dependency.
+            implementation("dev.lisom.thirdparty:sherpa-onnx-android:$sherpaVersion")
         }
         jvmMain.dependencies {
-            // Pinned upstream JVM API and Windows x64 native runtime; no runtime network access.
-            implementation(files(sherpaJvmJar, sherpaWindowsNativeJar))
+            // Pinned API/native artifacts are exposed as Maven modules for valid JVM POMs.
+            implementation("dev.lisom.thirdparty:sherpa-onnx-jvm:$sherpaVersion")
+            implementation("dev.lisom.thirdparty:sherpa-onnx-native-win-x64:$sherpaVersion")
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies { implementation(kotlin("test")) }
@@ -126,7 +216,11 @@ kotlin {
 tasks.configureEach {
     when {
         name.contains("compile", ignoreCase = true) &&
-            name.contains("Android", ignoreCase = true) -> dependsOn(downloadSherpaAar)
-        name == "compileKotlinJvm" -> dependsOn(prepareSherpaWindowsNativeRuntime)
+            name.contains("Android", ignoreCase = true) -> dependsOn(prepareSherpaAndroidMaven)
+        name == "compileKotlinJvm" -> dependsOn(prepareSherpaWindowsMaven)
+        name.startsWith("publish") -> {
+            dependsOn(prepareSherpaAndroidMaven)
+            dependsOn(prepareSherpaWindowsMaven)
+        }
     }
 }
