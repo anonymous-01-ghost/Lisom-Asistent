@@ -18,7 +18,7 @@ No será una aplicación independiente, no tendrá interfaz gráfica propia y no
 
 Su función será escuchar al usuario, reconocer su voz, interpretar sus instrucciones y entregar órdenes estructuradas a la aplicación que lo integre.
 
-La primera integración será con Lynox Music. Lynox Music permanecerá en su propio repositorio: este repositorio contiene exclusivamente Lisom Assistant.
+La primera integración será con Lisom Play. Lisom Play permanecerá en su propio repositorio: este repositorio contiene exclusivamente Lisom Assistant.
 
 ## 2. Objetivos principales
 
@@ -208,9 +208,9 @@ sealed interface LisomCommand {
 
 Estos ejemplos representan el diseño inicial; la API definitiva se establecerá durante la implementación.
 
-## 7. Integración con Lynox Music
+## 7. Integración con Lisom Play
 
-Lynox Music será responsable de la interfaz gráfica, el catálogo musical, la reproducción y la gestión de las letras.
+Lisom Play será responsable de la interfaz gráfica, el catálogo musical, la reproducción y la gestión de las letras.
 
 Lisom solamente interpretará las instrucciones y enviará los comandos.
 
@@ -220,11 +220,11 @@ Ejemplo: el usuario dice «Oye Lisom, reproduce música de Morat». Lisom entreg
 LisomCommand.PlayArtist("Morat")
 ```
 
-Lynox Music recibe el comando y realiza la búsqueda y reproducción.
+Lisom Play recibe el comando y realiza la búsqueda y reproducción.
 
-Lisom no necesita conocer los servidores, proveedores musicales ni la estructura interna del catálogo de Lynox Music.
+Lisom no necesita conocer los servidores, proveedores musicales ni la estructura interna del catálogo de Lisom Play.
 
-**Límite entre proyectos:** Lynox Music será una aplicación anfitriona independiente. No se incorporará código exclusivo de Lynox Music a este repositorio.
+**Límite entre proyectos:** Lisom Play será una aplicación anfitriona independiente. No se incorporará código exclusivo de Lisom Play a este repositorio.
 
 ## 8. Tecnologías
 
@@ -333,7 +333,7 @@ Las herramientas de compilación podrán necesitar Internet para descargar depen
 - Verificar permisos y restricciones de audio.
 
 ### Fase 7 — Integración
-- Integrar Lisom SDK en Lynox Music.
+- Integrar Lisom SDK en Lisom Play.
 - Conectar comandos con el reproductor.
 - Probar búsqueda musical.
 - Probar reproducción y controles.
@@ -367,14 +367,14 @@ La primera versión funcional deberá incluir:
 - Interpretación de comandos básicos.
 - Respuestas mediante voz.
 - API pública para aplicaciones.
-- Integración de prueba con Lynox Music.
+- Integración de prueba con Lisom Play.
 - Funcionamiento sin Internet.
 
 ## 14. Resultado esperado
 
 Al finalizar, Lisom Assistant será una librería SDK independiente que cualquier aplicación compatible podrá integrar.
 
-Lynox Music será su primera aplicación anfitriona, pero no será su única posible aplicación.
+Lisom Play será su primera aplicación anfitriona, pero no será su única posible aplicación.
 
 **Definición final del producto:**
 
