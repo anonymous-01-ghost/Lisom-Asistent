@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Offline Spanish Piper/VITS synthesizer for Android.
@@ -29,6 +30,7 @@ class SherpaPiperSpeechSynthesizer(
     private val speed: Float = 1.0f,
 ) : SpeechSynthesizer {
     private val engineMutex = Mutex()
+    private val generationVersion = AtomicLong(0L)
     private var engine: OfflineTts? = null
     private var released = false
 
@@ -44,6 +46,7 @@ class SherpaPiperSpeechSynthesizer(
 
     override suspend fun speak(text: String) {
         require(text.isNotBlank()) { "Speech text cannot be blank." }
+        val requestedGeneration = generationVersion.get()
 
         val generated = withContext(Dispatchers.Default) {
             engineMutex.withLock {
@@ -53,14 +56,18 @@ class SherpaPiperSpeechSynthesizer(
             }
         }
 
-        audioOutput.play(generated.samples, generated.sampleRate)
+        if (generationVersion.get() == requestedGeneration) {
+            audioOutput.play(generated.samples, generated.sampleRate)
+        }
     }
 
     override suspend fun stop() {
+        generationVersion.incrementAndGet()
         audioOutput.stop()
     }
 
     override suspend fun release() {
+        generationVersion.incrementAndGet()
         engineMutex.withLock {
             if (released) return@withLock
             released = true
