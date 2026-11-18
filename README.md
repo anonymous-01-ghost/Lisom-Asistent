@@ -39,15 +39,16 @@ Lisom Assistant is an embeddable voice-engine SDK for applications that need loc
 - Android microphone capture using `AudioRecord`, plus a Sherpa-ONNX Moonshine v2 adapter.
 - Windows/JVM microphone capture using Java Sound, plus a Sherpa-ONNX Moonshine v2 adapter targeting Windows x64.
 - Experimental Spanish open-vocabulary wake-word adapters for Android and Windows/JVM, using local Sherpa Zipformer KWS assets and a generated `oye lisom` keyword list.
+- A bounded 1.6-second wake-word pre-roll relay and local silence endpoint that hand the same microphone stream to ASR without reopening the microphone.
 - Pinned Android, JVM and Windows native Sherpa artifacts with SHA-256 verification during build.
 - GitHub Actions checks for shared JVM/NLU logic, Android source compilation, and Windows x64 ASR/KWS adapter compilation and PCM tests.
 
-Android source compilation passed in run `44383261711`. Windows x64 adapter compilation and PCM conversion tests passed in run `44387376519`; the Android and Windows KWS adapter source also compiled in run `44388881542`. Neither platform is declared fully supported until physical microphone tests and offline Spanish inference succeed.
+Android source compilation passed in run `44383261711`. Windows x64 adapter compilation and PCM conversion tests passed in run `44387376519`; the Android and Windows KWS adapter source also compiled in run `44388881542`, and the core handoff tests passed in run `44393655204`. Neither platform is declared fully supported until physical microphone tests and offline Spanish inference succeed.
 
 ## Still pending
 
 - Physical-device audio capture and airplane-mode ASR validation for Android and Windows.
-- Validation of the provisional local **Oye Lisom** wake-word model, Peruvian Spanish accuracy, false-trigger rates, and robust audio handoff to ASR.
+- Validation of the provisional local **Oye Lisom** wake-word model on Peruvian Spanish voices, fast-following command preservation, noise conditions, and false-trigger rates.
 - Offline Spanish TTS.
 - iOS native implementation and compilation with macOS/Xcode.
 - Dependency and model licence review, final distribution licence, and Gradle Wrapper.
@@ -69,6 +70,7 @@ After cloning the private repository and installing JDK 17 and Gradle 9.7.0:
 ```powershell
 gradle :lisom-nlu:jvmTest
 gradle :lisom-speech:jvmTest
+gradle :lisom-core:jvmTest
 gradle :lisom-platform:jvmTest
 gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
 ```
@@ -85,6 +87,7 @@ For Windows Sherpa native runtime preparation and JVM launch configuration, see 
 - [Android ASR](docs/ANDROID_ASR.md)
 - [Windows ASR](docs/WINDOWS_ASR.md)
 - [Wake-word KWS](docs/WAKE_WORD_KWS.md)
+- [Runtime architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 
 ## Licensing
