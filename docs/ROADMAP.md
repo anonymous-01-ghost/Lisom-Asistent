@@ -20,10 +20,11 @@
 - [x] Add Android AudioRecord capture for mono PCM16/16 kHz with bounded shared buffering and an explicit end-of-utterance marker (physical-device validation pending).
 - [x] Add an Android Sherpa-ONNX 2.0.1 Moonshine v2 adapter using app-supplied local model files.
 - [x] Pin the upstream Android AAR by SHA-256 and download it at build time; no native binary is committed to the repository.
-- [x] Compile Android adapter and shared JVM/NLU jobs successfully in GitHub Actions run `44383261711` (physical-device microphone and airplane-mode inference still pending).
+- [x] Pass Android source compilation and shared JVM/NLU CI in run `44383261711`; a later full workflow also passed Android and shared checks in run `44387376519`.
+- [ ] Validate Android runtime permission flow, physical-device microphone capture, and airplane-mode inference.
 - [x] Add Windows/JVM microphone capture using Java Sound for mono PCM16/16 kHz.
 - [x] Add a Windows x64 Sherpa-ONNX Moonshine v2 adapter and pin the JVM/native artifacts by SHA-256.
-- [ ] Validate Windows/JVM adapter compilation and PCM conversion tests in Windows CI.
+- [x] Pass Windows x64 adapter compilation and PCM conversion tests in run `44387376519`.
 - [ ] Validate Windows microphone capture and Spanish model inference on a physical Windows x64 machine.
 - [ ] Validate Spanish recognition accuracy, latency, memory, and lifecycle offline.
 - [ ] Implement iOS only after a macOS/Xcode build host is available.
