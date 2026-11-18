@@ -9,6 +9,7 @@ import android.media.MediaRecorder
 import dev.lisom.speech.AudioInput
 import dev.lisom.speech.PcmAudioFrame
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,6 +29,7 @@ import kotlin.math.max
  * Android microphone capture: mono PCM16 at 16 kHz. The host application must
  * request RECORD_AUDIO at runtime before calling start().
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class AndroidAudioInput(
     private val context: Context,
 ) : AudioInput, AutoCloseable {
@@ -124,6 +126,11 @@ class AndroidAudioInput(
                 isEndOfStream = true,
             ),
         )
+    }
+
+    override suspend fun release() {
+        stop()
+        scope.cancel()
     }
 
     override fun close() {
