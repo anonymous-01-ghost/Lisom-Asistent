@@ -1,6 +1,6 @@
 # Sherpa-ONNX adapter implementation plan
 
-**Status:** Android adapter source and build wiring committed; Android compilation and device validation pending. Windows and iOS remain planned.
+**Status:** Initial Android and Windows/JVM adapters are implemented. Android source compilation passed CI run `44383261711`; Windows source compilation and PCM tests are awaiting the newly added Windows CI job. Physical-device validation remains pending.
 **Pinned engine candidate:** sherpa-onnx v2.0.1.
 **Constraint:** all audio capture and inference remain local; no cloud service, API key, hosted model, or paid runtime dependency.
 
@@ -28,51 +28,45 @@ Official references:
 Keep all Sherpa classes out of `commonMain`. The existing common contracts remain the SDK boundary:
 
 - `AudioInput`: one mono, signed 16-bit PCM stream at 16 kHz.
-- `SpeechRecognizer`: local ASR with endpoint/VAD handling.
+- `SpeechRecognizer`: local ASR with bounded utterance handling.
 - `WakeWordDetector`: local keyword spotting for the exact phrase `Oye Lisom`.
 - `SpeechSynthesizer`: local TTS.
 
-Platform adapters must own native resource lifecycle, model paths, microphone permissions, audio focus/session handling, and native error translation. The SDK must not silently download models at runtime. The host app or an explicit setup flow installs model files locally and passes their paths to the adapter.
+Platform adapters own native resource lifecycle, model paths, microphone permissions, audio focus/session handling, and native error translation. The SDK must not silently download models at runtime. The host app or an explicit setup flow installs model files locally and passes their paths to the adapter.
 
-## Android implementation progress
+## Android implementation
 
-Initial source has been added under `lisom-platform/src/androidMain`:
+Initial source is under `lisom-platform/src/androidMain`:
 
 - `AndroidAudioInput` captures mono PCM16/16 kHz using `AudioRecord` and emits an explicit end-of-stream frame.
 - `SherpaMoonshineSpeechRecognizer` buffers one bounded push-to-talk utterance and decodes it with the Sherpa offline Moonshine v2 API.
 - The v2.0.1 AAR is downloaded into the build directory and SHA-256 verified; it is not committed to Git.
 - The host app supplies the local Spanish model directory and requests microphone permission at runtime.
-- Android compilation has been added to CI. Source is not considered supported until CI and physical-device airplane-mode tests pass.
+- Android source compilation passed GitHub Actions run `44383261711`.
+- Permission handling, real microphone capture, device lifecycle, and airplane-mode recognition remain untested on physical hardware.
 
-## Android implementation sequence
+## Windows/JVM implementation
 
-1. Add a dedicated Android-only adapter source set/module; do not place Android JNI dependencies in shared JVM source sets.
-2. Consume the upstream AAR and validate the actual package/API surface against v2.0.1.
-3. Implement microphone capture with Android `AudioRecord`, 16 kHz mono PCM, bounded buffers, and cancellation-safe shutdown.
-4. Feed Sherpa streaming ASR in small chunks and use its endpoint/VAD mechanism to close utterances.
-5. Add model-path validation and actionable errors for missing or unreadable model files.
-6. Test permission denial, interruption, repeated start/stop, device rotation/process lifecycle, airplane mode, and low-memory behavior.
+Initial source is under `lisom-platform/src/jvmMain`:
 
-## Windows/JVM implementation sequence
-
-1. Keep the JVM API dependency and Windows native runtime dependency in the Windows/JVM adapter only.
-2. Select the native artifact for the actual process architecture (x64 or ARM64); fail fast with a diagnostic on unsupported architectures.
-3. Implement microphone capture behind `AudioInput` without binding the SDK to one UI framework.
-4. Validate native library loading on a clean Windows machine with no developer PATH assumptions.
-5. Test device selection, microphone removal, repeated start/stop, and application shutdown.
-
-The upstream Maven example documents coordinates for the JVM API and separate platform-native artifacts. Confirm the repository configuration and resolve the artifacts in a clean Windows build before adding them to the version catalog.
+- `WindowsAudioInput` captures mono signed PCM16/16 kHz via Java Sound `TargetDataLine`, emits bounded frames, and closes an utterance with the shared end-of-stream marker.
+- `SherpaMoonshineSpeechRecognizer` uses the Sherpa v2.0.1 JVM API with the Spanish Moonshine v2 model and CPU inference.
+- The JVM API and Windows x64 native JARs are pinned by SHA-256 and fetched into the Gradle build directory.
+- Gradle extracts `sherpa-onnx-jni.dll` and `onnxruntime.dll` into `lisom-platform/build/third-party/sherpa-onnx-win-x64`.
+- The host JVM must be started with `-Djava.library.path` set to that directory before Sherpa classes are loaded.
+- The initial adapter supports Windows x64/AMD64 only. Windows ARM64 is not yet wired into the build.
+- The Windows CI job compiles the adapter and runs PCM conversion tests; physical microphone capture and model inference remain pending.
 
 ## iOS/Kotlin Native
 
-Do not add an iOS dependency until a macOS/Xcode build host is available. The current release asset list does not provide an iOS Kotlin/Native framework that can simply be added to this project. Build the upstream C API for supported iOS device and simulator architectures, package it as an XCFramework, then expose the required C API through Kotlin/Native cinterop. Validate microphone permission, AVAudioSession lifecycle, interruption handling, and app-background restrictions on a real iOS device.
+Do not add an iOS dependency until a macOS/Xcode build host is available. Build the upstream C API for supported iOS device and simulator architectures, package it as an XCFramework, then expose the required C API through Kotlin/Native cinterop. Validate microphone permission, AVAudioSession lifecycle, interruption handling, and app-background restrictions on a real iOS device.
 
 ## Shared audio pipeline requirements
 
 - Do not let the wake-word detector and ASR compete for independent microphone captures. One platform capture session must fan out frames to consumers.
 - A wake-word event must preserve enough post-keyword audio for a user who says `Oye Lisom, reproduce ...` without an artificial pause. The current event contract does not yet define this handoff; resolve it before claiming wake-word-to-command operation.
 - Bound buffering and define overflow behavior. Never accumulate unbounded PCM frames.
-- Use cancellation-safe ownership: stopping or releasing the engine must stop the microphone and release every native recognizer/stream exactly once.
+- Use cancellation-safe ownership: stopping or releasing the engine must stop the microphone and release every native stream and recognizer exactly once.
 - Keep push-to-talk and wake-word modes mutually exclusive unless an explicit shared-session state machine is implemented.
 - A recognition failure must not leave the microphone active or the engine stuck in `Listening`.
 
@@ -93,4 +87,4 @@ An adapter is complete only after:
 - lifecycle, latency, real-time-factor, memory, and package-size measurements;
 - recorded binary/model licenses and checksums.
 
-Until then, the platform remains **planned**, not supported.
+Android compilation is verified, and Windows implementation has been added, but neither platform is declared fully supported until all corresponding hardware, inference, lifecycle, and licensing gates pass.
