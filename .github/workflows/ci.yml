@@ -28,3 +28,24 @@ jobs:
         run: gradle :lisom-speech:jvmTest
       - name: Run JVM demo
         run: gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
+
+  android-adapter-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.7.0"
+      - name: Compile Android platform adapter
+        run: gradle :lisom-platform:compileDebugKotlinAndroid
