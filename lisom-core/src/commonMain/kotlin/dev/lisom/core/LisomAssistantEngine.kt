@@ -70,6 +70,11 @@ class LisomAssistantEngine(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
+                try {
+                    audioInput.stop()
+                } catch (_: Exception) {
+                    // Preserve the original recognition failure for the host app.
+                }
                 reportFailure("speech_recognition_failed", failure)
             }
         }
@@ -103,6 +108,11 @@ class LisomAssistantEngine(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
+                try {
+                    audioInput.stop()
+                } catch (_: Exception) {
+                    // Preserve the original wake-word session failure.
+                }
                 reportFailure("wake_word_session_failed", failure)
             }
         }
