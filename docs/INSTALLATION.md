@@ -3,26 +3,26 @@
 ## Requirements
 
 - JDK 17 or newer.
-- Gradle 9.7.0 for the checked-in Kotlin 2.4.21 / Android Gradle Plugin 9.3.1 combination.
+- Gradle 9.7.0 is pinned by the checked-in Gradle Wrapper; no separate Gradle installation is needed.
 - Android SDK 36 for Android target compilation.
 - macOS with Xcode 26.4 for iOS native compilation.
 
-The Kotlin Multiplatform compatibility table lists Gradle 9.7.0 as the upper supported Gradle version for Kotlin 2.4.20–2.4.21. The repository pins that compatible version rather than a newer Gradle release.
+The repository wrapper pins Gradle 9.7.0 for the Kotlin 2.4.21 / Android Gradle Plugin 9.3.1 build. The first wrapper run downloads that Gradle distribution.
 
 ## Windows: run the NLU demo
 
-Install a compatible JDK and Gradle, clone the private repository, then run:
+Install JDK 17 or newer, clone the private repository, then run:
 
 ```powershell
-gradle :lisom-nlu:jvmTest
-gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
+.\\gradlew.bat :lisom-nlu:jvmTest
+.\\gradlew.bat :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
 ```
 
 ## Compile the JVM target
 
 ```powershell
-gradle :lisom-platform:compileKotlinJvm
-gradle :lisom-core:compileKotlinJvm
+.\\gradlew.bat :lisom-platform:compileKotlinJvm
+.\\gradlew.bat :lisom-core:compileKotlinJvm
 ```
 
 ## Android and iOS

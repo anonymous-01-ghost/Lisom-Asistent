@@ -1,6 +1,6 @@
 # Android offline ASR adapter
 
-**Status:** Android adapter compiles successfully in GitHub Actions run `44383261711`. Physical-device microphone and airplane-mode validation are still pending.
+**Status:** Android microphone, Moonshine ASR, experimental Spanish KWS, and local Piper/VITS TTS adapters compile in CI. Physical-device microphone capture, inference, wake-word accuracy, and spoken output remain unvalidated.
 
 ## Components
 
@@ -17,7 +17,7 @@ The `lisom-platform` Android source set uses the upstream Sherpa-ONNX v2.0.1 AAR
 
 `a8d09d1d32f3eb8520482c6d3d43fae674681c5b050385967c70a3c2c9bf0ee7`
 
-The 47.2 MB AAR is not committed to Git. This is a build-time dependency fetch only; the app performs no network requests for recognition and the recognizer does not download models.
+The AAR is not committed to Git. It is prepared as a separate artifact in the SDK's local Maven repository so the host app can add it as a runtime dependency; see [Installation](INSTALLATION.md). This is a build-time dependency fetch only; the app performs no network requests for recognition and the recognizer does not download models.
 
 ## Model installation
 
@@ -54,5 +54,5 @@ The host app remains responsible for permission UX, lifecycle ownership, and any
 - The model is not downloaded or bundled automatically.
 - The adapter currently uses CPU inference and two compute threads by default.
 - The 20-second maximum utterance is configurable (1–60 seconds).
-- Wake-word detection, post-keyword audio handoff, streaming partial transcripts, TTS, and iOS remain separate work.
+- Experimental Spanish wake-word detection and post-keyword audio handoff are implemented, but need real-device validation. Offline Spanish TTS adapters are implemented; spoken output and lifecycle still need physical-device testing. Partial streaming transcripts and iOS native adapters remain pending.
 - Do not mark Android ASR as fully supported until permission flow, microphone capture, and airplane-mode inference pass on physical hardware.

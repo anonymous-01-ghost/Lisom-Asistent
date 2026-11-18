@@ -1,6 +1,6 @@
 # Windows offline ASR adapter
 
-**Status:** Windows x64 adapter compilation and PCM conversion tests passed in GitHub Actions run `44387376519`. Physical microphone capture and local Spanish-model inference remain pending.
+**Status:** Windows x64 ASR, experimental KWS, local Piper/VITS TTS adapters, and PCM conversion tests compile in CI. Real microphone capture, offline model inference, wake-word accuracy, and TTS playback on Windows hardware remain unvalidated.
 
 ## Components
 
@@ -25,7 +25,7 @@ Gradle downloads these files into the module build directory, verifies their has
 Prepare the Windows native runtime:
 
 ```powershell
-gradle :lisom-platform:prepareSherpaWindowsNativeRuntime
+.\\gradlew.bat :lisom-platform:prepareSherpaWindowsMaven
 ```
 
 ## Configure native library loading
@@ -70,4 +70,4 @@ Connect these adapters to `LisomAssistantEngine` using the existing dependency-i
 - Java Sound must be able to open a mono 16 kHz PCM16 input line. Unsupported devices fail with a diagnostic instead of silently changing sample rates.
 - CPU inference is used by default with two threads.
 - The model is not downloaded or bundled automatically.
-- Wake-word detection, preservation of speech immediately after the wake phrase, streaming partial transcripts, and offline TTS remain separate work.
+- Experimental Spanish wake-word detection and bounded handoff to ASR are implemented, but phrase accuracy and false-trigger rates need real-device testing. Offline Spanish TTS adapters are implemented; audio playback, interruption, and voice quality still need hardware validation. Partial streaming ASR transcripts remain unimplemented.

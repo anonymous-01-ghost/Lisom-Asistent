@@ -52,12 +52,12 @@ Android source compilation passed in run `44383261711`. Windows x64 adapter comp
 - Validation of the provisional local **Oye Lisom** wake-word model on Peruvian Spanish voices, fast-following command preservation, noise conditions, and false-trigger rates.
 - Physical-device validation of offline Spanish TTS voice quality, interruption, and audio output lifecycle.
 - iOS native implementation and compilation with macOS/Xcode.
-- Dependency and model licence review, final distribution licence, and Gradle Wrapper.
+- Dependency and model licence review and final distribution licence.
 
 ## Build requirements
 
 - JDK 17+
-- Gradle 9.7.0
+- Gradle 9.7.0, supplied by the checked-in Gradle Wrapper (no global Gradle installation required).
 - Android SDK 36 for Android target builds
 - Windows x64 for the current Windows native runtime
 - macOS with Xcode 26.4 for iOS native builds
@@ -66,14 +66,14 @@ The pinned combination is Kotlin 2.4.21 and Android Gradle Plugin 9.3.1.
 
 ## Run checks on Windows
 
-After cloning the private repository and installing JDK 17 and Gradle 9.7.0:
+After cloning the private repository and installing JDK 17, run the checks through the pinned Gradle Wrapper:
 
 ```powershell
-gradle :lisom-nlu:jvmTest
-gradle :lisom-speech:jvmTest
-gradle :lisom-core:jvmTest
-gradle :lisom-platform:jvmTest
-gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
+.\\gradlew.bat :lisom-nlu:jvmTest
+.\\gradlew.bat :lisom-speech:jvmTest
+.\\gradlew.bat :lisom-core:jvmTest
+.\\gradlew.bat :lisom-platform:jvmTest
+.\\gradlew.bat :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
 ```
 
 For Windows Sherpa native runtime preparation and JVM launch configuration, see [Windows ASR](docs/WINDOWS_ASR.md).
