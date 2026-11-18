@@ -7,7 +7,7 @@
 
 Lisom Assistant is an embeddable voice-engine SDK for applications that need local speech recognition, wake-word activation, command interpretation, and spoken responses.
 
-> This repository is exclusively Lisom Assistant. Lynox Music and all other host applications remain separate projects.
+> This repository is exclusively Lisom Assistant. Lisom Play and all other host applications remain separate projects.
 
 ## Non-negotiable product rules
 
