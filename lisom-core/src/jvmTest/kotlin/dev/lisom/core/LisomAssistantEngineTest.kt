@@ -6,6 +6,7 @@ import dev.lisom.nlu.SpanishRuleBasedInterpreter
 import dev.lisom.testing.FakeAudioInput
 import dev.lisom.testing.FakeSpeechRecognizer
 import dev.lisom.testing.FakeSpeechSynthesizer
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -66,7 +67,7 @@ class LisomAssistantEngineTest {
                 minimumNluConfidence = 0.95f,
             ),
         )
-        val collector = launch { engine.commands.collect { emitted += it } }
+        val collector = launch(start = CoroutineStart.UNDISPATCHED) { engine.commands.collect { emitted += it } }
 
         engine.startPushToTalk()
         yield()
@@ -95,7 +96,7 @@ class LisomAssistantEngineTest {
     fun emittedCommandIncludesNluConfidence() = runBlocking {
         val emitted = mutableListOf<dev.lisom.models.RecognizedCommand>()
         val engine = createEngine()
-        val collector = launch { engine.commands.collect { emitted += it } }
+        val collector = launch(start = CoroutineStart.UNDISPATCHED) { engine.commands.collect { emitted += it } }
 
         engine.startPushToTalk()
         yield()
