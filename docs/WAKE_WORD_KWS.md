@@ -1,6 +1,6 @@
 # Local wake-word detection: "Oye Lisom"
 
-**Status:** Initial Sherpa-ONNX detector adapters added for Android and Windows/JVM. Model selection is provisional; compile validation, keyword phrase validation, false-trigger testing, and engine handoff are pending.
+**Status:** Initial Sherpa-ONNX detector adapters for Android and Windows/JVM pass source-compilation CI (run `44388881542`). Model selection is provisional; exact-phrase validation, false-trigger testing, and engine handoff are pending.
 
 ## Model candidate
 
@@ -59,7 +59,7 @@ Before enabling wake-word mode in Lisom Play, implement and test a single-owner 
 
 ## Release validation
 
-- Compile the Android and Windows/JVM adapters in CI.
+- [x] Compile the Android and Windows/JVM adapters in CI (run `44388881542`).
 - Run recordings of "Oye Lisom" from multiple Peruvian Spanish speakers, microphones, distances, and noise conditions.
 - Measure false accept rate during ordinary conversation and media playback, and false reject rate for the wake phrase.
 - Test that a command spoken immediately after the wake phrase is fully preserved.
