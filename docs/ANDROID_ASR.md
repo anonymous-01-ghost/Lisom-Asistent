@@ -1,13 +1,13 @@
 # Android offline ASR adapter
 
-**Status:** Initial implementation committed; Android compilation and physical-device validation are still pending.
+**Status:** Android adapter compiles successfully in GitHub Actions run `44383261711`. Physical-device microphone and airplane-mode validation are still pending.
 
 ## Components
 
 - `AndroidAudioInput`: captures mono PCM16 at 16 kHz with Android `AudioRecord`.
 - `SherpaMoonshineSpeechRecognizer`: runs Sherpa-ONNX OfflineRecognizer with the Spanish Moonshine v2 model.
 - `PcmAudioFrame.isEndOfStream`: closes a push-to-talk utterance after `AudioInput.stop()`.
-- `SpeechRecognitionResult.confidence`: nullable. The Sherpa offline result does not expose a calibrated confidence score, so this adapter returns `null` rather than inventing one.
+- `SpeechRecognitionResult.confidence`: nullable. The Sherpa offline result does not expose a calibrated confidence score, so this adapter returns `null`.
 
 The recognizer is offline batch ASR: it buffers one bounded utterance (20 seconds by default) and decodes it after push-to-talk stops. It does not yet produce partial streaming transcripts.
 
@@ -50,9 +50,9 @@ The host app remains responsible for permission UX, lifecycle ownership, and any
 
 ## Current limitations
 
-- No Android build or device test has yet been run against this commit.
+- CI verifies Android source compilation; it does not exercise an Android microphone or load the model on a device.
 - The model is not downloaded or bundled automatically.
 - The adapter currently uses CPU inference and two compute threads by default.
 - The 20-second maximum utterance is configurable (1–60 seconds).
-- Wake-word detection, post-keyword audio handoff, streaming partial transcripts, TTS, and Windows remain separate work.
-- Do not mark Android ASR as supported until a clean Android build and an airplane-mode microphone test pass on physical hardware.
+- Wake-word detection, post-keyword audio handoff, streaming partial transcripts, TTS, and iOS remain separate work.
+- Do not mark Android ASR as fully supported until permission flow, microphone capture, and airplane-mode inference pass on physical hardware.
