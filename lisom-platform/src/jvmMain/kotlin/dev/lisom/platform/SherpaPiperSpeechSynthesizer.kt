@@ -117,6 +117,7 @@ class SherpaPiperSpeechSynthesizer(
                 "Required local Spanish TTS asset is missing or unreadable: " + file.absolutePath
             }
         }
+        verifyModelChecksum(model)
 
         val vits = OfflineTtsVitsModelConfig.builder()
             .setModel(model.absolutePath)

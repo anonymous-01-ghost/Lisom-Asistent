@@ -31,6 +31,19 @@ class LisomAssistantEngineTest {
     }
 
     @Test
+    fun speakDelegatesTextToInjectedSynthesizer() = runBlocking {
+        val synthesizer = FakeSpeechSynthesizer()
+        val engine = createEngine(speechSynthesizer = synthesizer)
+
+        engine.initialize()
+        engine.speak("Hola, soy Lisom")
+
+        assertEquals(listOf("Hola, soy Lisom"), synthesizer.spokenTexts)
+        assertEquals(LisomAssistantState.Ready, engine.state.value)
+        engine.release()
+    }
+
+    @Test
     fun minimumNluConfidenceFiltersWeakInterpretations() = runBlocking {
         val emitted = mutableListOf<dev.lisom.models.RecognizedCommand>()
         val engine = createEngine(
@@ -92,5 +105,4 @@ class LisomAssistantEngineTest {
         commandInterpreter = SpanishRuleBasedInterpreter(),
         speechSynthesizer = speechSynthesizer,
     )
-
 }
