@@ -1,7 +1,7 @@
 # Lisom Assistant SDK
 
 **Version:** 0.1.0-SNAPSHOT  
-**Status:** Offline ASR adapters implemented; hardware validation pending  
+**Status:** Android/Windows offline ASR and experimental KWS adapters implemented; hardware validation pending  
 **Technology:** Kotlin Multiplatform  
 **Runtime processing:** Local and offline-only
 
@@ -38,15 +38,16 @@ Lisom Assistant is an embeddable voice-engine SDK for applications that need loc
 - Offline-only configuration guard and deterministic Spanish command interpreter with tests.
 - Android microphone capture using `AudioRecord`, plus a Sherpa-ONNX Moonshine v2 adapter.
 - Windows/JVM microphone capture using Java Sound, plus a Sherpa-ONNX Moonshine v2 adapter targeting Windows x64.
+- Experimental Spanish open-vocabulary wake-word adapters for Android and Windows/JVM, using local Sherpa Zipformer KWS assets and a generated `oye lisom` keyword list.
 - Pinned Android, JVM and Windows native Sherpa artifacts with SHA-256 verification during build.
-- GitHub Actions checks for shared JVM/NLU logic, Android source compilation, and Windows x64 adapter compilation/PCM tests.
+- GitHub Actions checks for shared JVM/NLU logic, Android source compilation, and Windows x64 ASR/KWS adapter compilation and PCM tests.
 
-Android source compilation passed in run `44383261711`. Windows x64 adapter compilation and PCM conversion tests passed in run `44387376519`. Neither platform is declared fully supported until physical microphone tests and offline Spanish inference succeed.
+Android source compilation passed in run `44383261711`. Windows x64 adapter compilation and PCM conversion tests passed in run `44387376519`; the Android and Windows KWS adapter source also compiled in run `44388881542`. Neither platform is declared fully supported until physical microphone tests and offline Spanish inference succeed.
 
 ## Still pending
 
 - Physical-device audio capture and airplane-mode ASR validation for Android and Windows.
-- A trained local **Oye Lisom** wake-word model and robust handoff to ASR.
+- Validation of the provisional local **Oye Lisom** wake-word model, Peruvian Spanish accuracy, false-trigger rates, and robust audio handoff to ASR.
 - Offline Spanish TTS.
 - iOS native implementation and compilation with macOS/Xcode.
 - Dependency and model licence review, final distribution licence, and Gradle Wrapper.
@@ -83,6 +84,7 @@ For Windows Sherpa native runtime preparation and JVM launch configuration, see 
 - [Offline mode](docs/OFFLINE_MODE.md)
 - [Android ASR](docs/ANDROID_ASR.md)
 - [Windows ASR](docs/WINDOWS_ASR.md)
+- [Wake-word KWS](docs/WAKE_WORD_KWS.md)
 - [Roadmap](docs/ROADMAP.md)
 
 ## Licensing
