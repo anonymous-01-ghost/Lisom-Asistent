@@ -15,5 +15,6 @@ interface LisomAssistant {
     suspend fun enableWakeWord()
     suspend fun disableWakeWord()
     suspend fun speak(text: String)
+    suspend fun stopSpeaking()
     suspend fun release()
 }
