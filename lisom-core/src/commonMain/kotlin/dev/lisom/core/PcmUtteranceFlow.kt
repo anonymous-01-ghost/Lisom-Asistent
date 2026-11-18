@@ -3,6 +3,7 @@ package dev.lisom.core
 import dev.lisom.speech.PcmAudioFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 
 /**
