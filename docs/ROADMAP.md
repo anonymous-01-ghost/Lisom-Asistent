@@ -13,15 +13,18 @@
 ## Phase 2 — Speech recognition (in progress)
 
 - [x] Evaluate and document sherpa-onnx v2.0.1 as a provisional engine candidate.
-- [x] Identify Moonshine Base Spanish quantized as the first ASR model candidate (license and device tests pending).
+- [x] Identify Moonshine Base Spanish quantized as the first ASR model candidate (licence and device tests pending).
 - [x] Document per-platform adapter boundaries, verified upstream artifact checksums, and implementation gates in [SHERPA_ADAPTER_IMPLEMENTATION.md](SHERPA_ADAPTER_IMPLEMENTATION.md).
 - [ ] Validate one pinned engine build across Android, JVM/Windows, and iOS; iOS requires a macOS/Xcode build host.
 - [ ] Review native binary and model licences.
-- [x] Add Android AudioRecord capture for mono PCM16/16 kHz with bounded shared buffering and an explicit end-of-utterance marker (device validation pending).
-- [x] Add an Android Sherpa-ONNX 2.0.1 Moonshine v2 adapter using app-supplied local model files (compile/device validation pending).
+- [x] Add Android AudioRecord capture for mono PCM16/16 kHz with bounded shared buffering and an explicit end-of-utterance marker (physical-device validation pending).
+- [x] Add an Android Sherpa-ONNX 2.0.1 Moonshine v2 adapter using app-supplied local model files.
 - [x] Pin the upstream Android AAR by SHA-256 and download it at build time; no native binary is committed to the repository.
-- [ ] Validate the Android adapter build, permission flow, real-device microphone capture, and airplane-mode inference.
-- [ ] Add Windows/JVM audio capture and Sherpa native runtime adapter.
+- [x] Compile Android adapter and shared JVM/NLU jobs successfully in GitHub Actions run `44383261711` (physical-device microphone and airplane-mode inference still pending).
+- [x] Add Windows/JVM microphone capture using Java Sound for mono PCM16/16 kHz.
+- [x] Add a Windows x64 Sherpa-ONNX Moonshine v2 adapter and pin the JVM/native artifacts by SHA-256.
+- [ ] Validate Windows/JVM adapter compilation and PCM conversion tests in Windows CI.
+- [ ] Validate Windows microphone capture and Spanish model inference on a physical Windows x64 machine.
 - [ ] Validate Spanish recognition accuracy, latency, memory, and lifecycle offline.
 - [ ] Implement iOS only after a macOS/Xcode build host is available.
 
