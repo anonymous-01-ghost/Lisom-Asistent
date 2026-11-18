@@ -14,6 +14,7 @@
 
 - [x] Evaluate and document sherpa-onnx v2.0.1 as a provisional engine candidate.
 - [x] Identify Moonshine Base Spanish quantized as the first ASR model candidate (license and device tests pending).
+- [x] Document per-platform adapter boundaries, verified upstream artifact checksums, and implementation gates in [SHERPA_ADAPTER_IMPLEMENTATION.md](SHERPA_ADAPTER_IMPLEMENTATION.md).
 - [ ] Validate one pinned engine build across Android, JVM/Windows, and iOS; iOS requires a macOS/Xcode build host.
 - [ ] Review native binary and model licences.
 - [ ] Implement 16 kHz mono audio capture on each platform.
@@ -25,7 +26,7 @@
 
 - [ ] Select or train a local "Oye Lisom" keyword model.
 - [ ] Integrate local keyword spotting.
-- [ ] Implement audio pre-roll and handoff to ASR.
+- [ ] Define bounded audio pre-roll and post-keyword handoff to ASR; the current event contract does not yet guarantee that speech immediately following the wake phrase is preserved.
 - [ ] Measure false accepts, false rejects, CPU and battery use.
 
 ## Phase 4 — NLU (in progress)
