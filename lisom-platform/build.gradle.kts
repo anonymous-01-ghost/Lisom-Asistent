@@ -68,20 +68,19 @@ fun publishThirdPartyModule(
             "<version>" + dependency.second + "</version>" +
             "</dependency>"
     }
-    moduleDirectory.resolve(artifactId + "-" + version + ".pom").writeText(
-        "<?xml version="1.0" encoding="UTF-8"?>" +
-            "<project xmlns="http://maven.apache.org/POM/4.0.0" " +
-            "xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" " +
-            "xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 " +
-            "https://maven.apache.org/xsd/maven-4.0.0.xsd">" +
-            "<modelVersion>4.0.0</modelVersion>" +
-            "<groupId>" + groupId + "</groupId>" +
-            "<artifactId>" + artifactId + "</artifactId>" +
-            "<version>" + version + "</version>" +
-            "<packaging>" + extension + "</packaging>" +
-            "<dependencies>" + dependencyXml + "</dependencies>" +
-            "</project>",
-    )
+    val pom = """<?xml version="1.0" encoding="UTF-8"?>""" +
+        """<project xmlns="http://maven.apache.org/POM/4.0.0" """ +
+        """xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" """ +
+        """xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 """ +
+        """https://maven.apache.org/xsd/maven-4.0.0.xsd">""" +
+        """<modelVersion>4.0.0</modelVersion>""" +
+        """<groupId>""" + groupId + """</groupId>""" +
+        """<artifactId>""" + artifactId + """</artifactId>""" +
+        """<version>""" + version + """</version>""" +
+        """<packaging>""" + extension + """</packaging>""" +
+        """<dependencies>""" + dependencyXml + """</dependencies>""" +
+        """</project>"""
+    moduleDirectory.resolve(artifactId + "-" + version + ".pom").writeText(pom)
 }
 
 val downloadSherpaAar by tasks.registering {
@@ -200,13 +199,13 @@ kotlin {
             implementation(project(":lisom-tts"))
         }
         androidMain.dependencies {
-            // The AAR is exposed as a Maven module so published SDK AARs have a valid dependency.
-            implementation("dev.lisom.thirdparty:sherpa-onnx-android:$sherpaVersion")
+            // The host receives the third-party AAR separately; it is compile-only here
+            // because AGP rejects embedding a direct local AAR into a published AAR.
+            compileOnly(files(sherpaAar))
         }
         jvmMain.dependencies {
-            // Pinned API/native artifacts are exposed as Maven modules for valid JVM POMs.
-            implementation("dev.lisom.thirdparty:sherpa-onnx-jvm:$sherpaVersion")
-            implementation("dev.lisom.thirdparty:sherpa-onnx-native-win-x64:$sherpaVersion")
+            // Pinned upstream JVM API and Windows x64 native runtime; no runtime network access.
+            implementation(files(sherpaJvmJar, sherpaWindowsNativeJar))
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies { implementation(kotlin("test")) }
