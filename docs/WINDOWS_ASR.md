@@ -1,6 +1,6 @@
 # Windows offline ASR adapter
 
-**Status:** Initial implementation committed; Windows CI compilation and physical-microphone/model validation are pending.
+**Status:** Windows x64 adapter compilation and PCM conversion tests passed in GitHub Actions run `44387376519`. Physical microphone capture and local Spanish-model inference remain pending.
 
 ## Components
 
@@ -65,8 +65,8 @@ Connect these adapters to `LisomAssistantEngine` using the existing dependency-i
 
 ## Current limitations
 
-- Windows CI compilation and the PCM conversion tests are pending for this commit.
-- Real microphone capture and the Spanish model have not yet been validated on a Windows device.
+- Windows CI compiles the adapter and executes the PCM conversion tests; it does not access a physical microphone or load the Spanish model.
+- Real microphone capture and Spanish-model inference have not yet been validated on a Windows x64 device.
 - Java Sound must be able to open a mono 16 kHz PCM16 input line. Unsupported devices fail with a diagnostic instead of silently changing sample rates.
 - CPU inference is used by default with two threads.
 - The model is not downloaded or bundled automatically.
