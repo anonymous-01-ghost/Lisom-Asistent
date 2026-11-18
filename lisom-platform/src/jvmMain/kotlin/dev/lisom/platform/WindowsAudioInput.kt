@@ -46,6 +46,7 @@ class WindowsAudioInput(
         extraBufferCapacity = 32,
     )
 
+    @Volatile
     private var line: TargetDataLine? = null
     private var captureJob: Job? = null
     private var released = false
