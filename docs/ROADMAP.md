@@ -37,8 +37,10 @@
 - [x] Add the raw "oye lisom" keyword definition and a Windows script to generate local BPE keyword tokens.
 - [x] Pass Android and Windows/JVM KWS adapter source compilation in CI run `44388881542`.
 - [ ] Validate exact "Oye Lisom" phrase detection on Peruvian Spanish voices and tune false-accept/false-reject thresholds.
-- [ ] Define bounded audio pre-roll and post-keyword handoff to ASR; the current event contract does not yet guarantee that speech immediately following the wake phrase is preserved.
-- [ ] Integrate the detector with the engine's single-owner microphone lifecycle.
+- [x] Add bounded 16-frame pre-roll and post-keyword handoff to ASR through one shared microphone relay.
+- [x] Add a local amplitude-based utterance endpoint (1.2 s trailing silence, 20 s maximum) and core JVM tests; CI run `44393655204` passed.
+- [x] Integrate the detector with the engine's single-owner microphone lifecycle and cancellation cleanup.
+- [ ] Validate fast-following commands, delayed speech, background noise, and microphone interruptions on physical hardware.
 - [ ] Measure always-on CPU, memory, latency, false accepts, false rejects, and battery use.
 
 ## Phase 4 — NLU (in progress)
