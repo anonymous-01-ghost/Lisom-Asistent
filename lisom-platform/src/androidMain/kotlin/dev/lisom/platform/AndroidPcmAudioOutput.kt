@@ -62,8 +62,10 @@ class AndroidPcmAudioOutput : SpeechAudioOutput {
                     samples.size,
                     AudioTrack.WRITE_BLOCKING,
                 )
-                check(written >= 0) {
-                    "Android TTS audio output failed with code " + written + "."
+                // AudioTrack.stop() can make a blocking write return a negative
+                // status. That is an expected interruption, not an output failure.
+                if (written < 0 && track.playState == AudioTrack.PLAYSTATE_PLAYING) {
+                    error("Android TTS audio output failed with code " + written + ".")
                 }
 
                 while (track.playState == AudioTrack.PLAYSTATE_PLAYING &&
