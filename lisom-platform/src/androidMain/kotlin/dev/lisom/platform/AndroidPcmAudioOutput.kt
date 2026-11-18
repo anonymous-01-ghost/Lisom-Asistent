@@ -88,10 +88,11 @@ class AndroidPcmAudioOutput : SpeechAudioOutput {
             currentTrack.also { currentTrack = null }
         }
         if (track != null) {
+            // The play() coroutine owns final release in its finally block. Stopping
+            // here unblocks writes without releasing the same AudioTrack twice.
             runCatching {
                 if (track.playState == AudioTrack.PLAYSTATE_PLAYING) track.stop()
             }
-            track.release()
         }
     }
 }
