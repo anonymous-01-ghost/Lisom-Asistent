@@ -8,9 +8,9 @@ interface WakeWordDetector {
     fun observe(audio: Flow<PcmAudioFrame>): Flow<WakeWordEvent>
 }
 
-data class WakeWordEvent(val phrase: String, val confidence: Float) {
+data class WakeWordEvent(val phrase: String, val confidence: Float?) {
     init {
         require(phrase.isNotBlank()) { "Detected phrase cannot be blank." }
-        require(confidence in 0f..1f) { "Confidence must be between 0 and 1." }
+        require(confidence == null || confidence in 0f..1f) { "Confidence must be null or between 0 and 1." }
     }
 }
