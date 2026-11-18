@@ -17,10 +17,13 @@
 - [x] Document per-platform adapter boundaries, verified upstream artifact checksums, and implementation gates in [SHERPA_ADAPTER_IMPLEMENTATION.md](SHERPA_ADAPTER_IMPLEMENTATION.md).
 - [ ] Validate one pinned engine build across Android, JVM/Windows, and iOS; iOS requires a macOS/Xcode build host.
 - [ ] Review native binary and model licences.
-- [ ] Implement 16 kHz mono audio capture on each platform.
-- [ ] Integrate a Spanish offline ASR model.
-- [ ] Add endpointing/VAD and confidence handling.
-- [ ] Validate accuracy and latency offline.
+- [x] Add Android AudioRecord capture for mono PCM16/16 kHz with bounded shared buffering and an explicit end-of-utterance marker (device validation pending).
+- [x] Add an Android Sherpa-ONNX 2.0.1 Moonshine v2 adapter using app-supplied local model files (compile/device validation pending).
+- [x] Pin the upstream Android AAR by SHA-256 and download it at build time; no native binary is committed to the repository.
+- [ ] Validate the Android adapter build, permission flow, real-device microphone capture, and airplane-mode inference.
+- [ ] Add Windows/JVM audio capture and Sherpa native runtime adapter.
+- [ ] Validate Spanish recognition accuracy, latency, memory, and lifecycle offline.
+- [ ] Implement iOS only after a macOS/Xcode build host is available.
 
 ## Phase 3 — Wake word
 
@@ -45,10 +48,10 @@
 
 ## Phase 6 — Platform hardening
 
-- [ ] Implement microphone permission and lifecycle adapters.
-- [ ] Validate Android foreground-service requirements.
+- [x] Declare Android RECORD_AUDIO permission in the library manifest; the host app must still request it at runtime.
+- [ ] Validate Android foreground-service requirements and device lifecycle.
 - [ ] Validate iOS foreground behavior and document background restrictions.
-- [ ] Test supported Windows audio devices.
+- [ ] Test supported Windows audio devices and native library loading.
 
 ## Phase 7 — SDK release
 
