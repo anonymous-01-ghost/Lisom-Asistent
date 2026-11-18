@@ -50,4 +50,4 @@ jobs:
         with:
           gradle-version: "9.7.0"
       - name: Compile Android platform adapter
-        run: gradle :lisom-platform:compileDebugKotlinAndroid
+        run: gradle :lisom-platform:compileAndroidMain
