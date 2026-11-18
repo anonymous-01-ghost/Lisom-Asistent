@@ -1,6 +1,6 @@
 # Sherpa-ONNX adapter implementation plan
 
-**Status:** Integration plan only. No native adapter is claimed as implemented.
+**Status:** Android adapter source and build wiring committed; Android compilation and device validation pending. Windows and iOS remain planned.
 **Pinned engine candidate:** sherpa-onnx v2.0.1.
 **Constraint:** all audio capture and inference remain local; no cloud service, API key, hosted model, or paid runtime dependency.
 
@@ -33,6 +33,16 @@ Keep all Sherpa classes out of `commonMain`. The existing common contracts remai
 - `SpeechSynthesizer`: local TTS.
 
 Platform adapters must own native resource lifecycle, model paths, microphone permissions, audio focus/session handling, and native error translation. The SDK must not silently download models at runtime. The host app or an explicit setup flow installs model files locally and passes their paths to the adapter.
+
+## Android implementation progress
+
+Initial source has been added under `lisom-platform/src/androidMain`:
+
+- `AndroidAudioInput` captures mono PCM16/16 kHz using `AudioRecord` and emits an explicit end-of-stream frame.
+- `SherpaMoonshineSpeechRecognizer` buffers one bounded push-to-talk utterance and decodes it with the Sherpa offline Moonshine v2 API.
+- The v2.0.1 AAR is downloaded into the build directory and SHA-256 verified; it is not committed to Git.
+- The host app supplies the local Spanish model directory and requests microphone permission at runtime.
+- Android compilation has been added to CI. Source is not considered supported until CI and physical-device airplane-mode tests pass.
 
 ## Android implementation sequence
 
