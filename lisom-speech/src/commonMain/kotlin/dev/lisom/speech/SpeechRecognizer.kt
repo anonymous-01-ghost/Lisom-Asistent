@@ -8,12 +8,20 @@ import kotlinx.coroutines.flow.Flow
  */
 interface SpeechRecognizer {
     suspend fun recognize(audio: Flow<PcmAudioFrame>): SpeechRecognitionResult
+
+    /** Releases native/model resources. Safe to call more than once. */
+    suspend fun release() = Unit
 }
 
 data class SpeechRecognitionResult(
     val text: String,
     val languageTag: String = "es",
-    val confidence: Float,
+    /** Null means the selected engine/model does not expose calibrated confidence. */
+    val confidence: Float?,
 ) {
-    init { require(confidence in 0f..1f) { "Confidence must be between 0 and 1." } }
+    init {
+        require(confidence == null || confidence in 0f..1f) {
+            "Confidence must be null or between 0 and 1."
+        }
+    }
 }
