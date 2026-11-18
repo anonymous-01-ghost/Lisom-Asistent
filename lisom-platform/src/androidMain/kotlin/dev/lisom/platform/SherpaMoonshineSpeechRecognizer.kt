@@ -31,7 +31,6 @@ class SherpaMoonshineSpeechRecognizer(
 
     private val recognizerMutex = Mutex()
     private var recognizer: OfflineRecognizer? = null
-    private val lifecycleMutex = Mutex()
     private var released = false
 
     init {
@@ -62,27 +61,25 @@ class SherpaMoonshineSpeechRecognizer(
 
             check(samples.isNotEmpty()) { "No microphone audio was captured for this utterance." }
 
-            val engine = getOrCreateRecognizer()
-            val stream = engine.createStream()
-            try {
-                stream.acceptWaveform(samples.toFloatArray(), sampleRate = 16_000)
-                engine.decode(stream)
-                val transcript = engine.getResult(stream).text.trim()
-                SpeechRecognitionResult(
-                    text = transcript,
-                    languageTag = "es",
-                    // Sherpa's OfflineRecognizerResult does not expose calibrated confidence.
-                    confidence = null,
-                )
-            } finally {
-                stream.release()
+            recognizerMutex.withLock {
+                check(!released) { "Speech recognizer has already been released." }
+                val engine = recognizer ?: createRecognizer().also { recognizer = it }
+                val stream = engine.createStream()
+                try {
+                    stream.acceptWaveform(samples.toFloatArray(), sampleRate = 16_000)
+                    engine.decode(stream)
+                    val transcript = engine.getResult(stream).text.trim()
+                    SpeechRecognitionResult(
+                        text = transcript,
+                        languageTag = "es",
+                        // Sherpa's OfflineRecognizerResult does not expose calibrated confidence.
+                        confidence = null,
+                    )
+                } finally {
+                    stream.release()
+                }
             }
         }
-
-    private suspend fun getOrCreateRecognizer(): OfflineRecognizer = recognizerMutex.withLock {
-        check(!released) { "Speech recognizer has already been released." }
-        recognizer ?: createRecognizer().also { recognizer = it }
-    }
 
     private fun createRecognizer(): OfflineRecognizer {
         val encoder = File(modelDirectory, "encoder_model.ort")
@@ -108,12 +105,10 @@ class SherpaMoonshineSpeechRecognizer(
         )
     }
 
-    override suspend fun release() = lifecycleMutex.withLock {
+    override suspend fun release() = recognizerMutex.withLock {
         if (released) return@withLock
         released = true
-        recognizerMutex.withLock {
-            recognizer?.release()
-            recognizer = null
-        }
+        recognizer?.release()
+        recognizer = null
     }
 }
