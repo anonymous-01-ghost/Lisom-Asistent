@@ -1,6 +1,6 @@
 # Local wake-word detection: "Oye Lisom"
 
-**Status:** Initial Sherpa-ONNX detector adapters for Android and Windows/JVM pass source-compilation CI (run `44388881542`). Model selection is provisional; exact-phrase validation, false-trigger testing, and engine handoff are pending.
+**Status:** Android and Windows/JVM KWS adapters compile in CI run `44388881542`. The core bounded audio handoff and silence-endpoint tests pass in run `44393655204`. The model remains experimental; exact-phrase accuracy and false-trigger testing are pending.
 
 ## Model candidate
 
@@ -51,18 +51,25 @@ Both accept the local model directory and stream mono PCM16 audio at 16 kHz. The
 
 The Sherpa KWS result does not expose a calibrated confidence score. `WakeWordEvent.confidence` is therefore nullable; the adapter emits `null` instead of inventing a score.
 
-## Important integration gap: preserve speech after the wake phrase
+## Wake-word to ASR audio handoff
 
-The new detector is an adapter building block, not yet an end-to-end "Oye Lisom" experience. The core audio pipeline must retain a bounded pre-roll buffer and hand the captured speech following the keyword to ASR without opening a second, late microphone subscription. Otherwise a user who says "Oye Lisom, reproduce ..." quickly may lose the first words of the command.
+The first core implementation is now present in `LisomAssistantEngine`:
 
-Before enabling wake-word mode in Lisom Play, implement and test a single-owner audio session with bounded buffering, event-to-ASR handoff, cancellation, and a policy that prevents the keyword detector and command recognizer from fighting over microphone lifecycle.
+- One physical microphone capture is relayed into a bounded `MutableSharedFlow` with 16 frames of replay (about 1.6 seconds with the current 100 ms adapters).
+- The KWS detector emits one event and is cancelled before ASR starts.
+- ASR subscribes to the same relay, receiving the cached pre-roll plus incoming frames. This prevents the first part of a fast command from being lost when the user says "Oye Lisom, reproduce ...".
+- `untilSpeechEndpoint` closes the utterance after 1.2 seconds of trailing low-amplitude PCM or a 20-second maximum, then emits the shared end-of-stream marker.
+- The core stops and restarts the microphone session in one owner-controlled loop; the detector and ASR do not open separate microphone devices.
+
+The PCM handoff and silence endpoint have unit tests in `lisom-core:jvmTest`, passing CI run `44393655204`. The voice activity threshold (mean absolute amplitude 500/32768 by default) and silence duration are initial heuristics, not tuned VAD parameters. Tests with real background noise, delayed commands, microphone interruptions, and physical devices remain necessary.
 
 ## Release validation
 
 - [x] Compile the Android and Windows/JVM adapters in CI (run `44388881542`).
 - Run recordings of "Oye Lisom" from multiple Peruvian Spanish speakers, microphones, distances, and noise conditions.
 - Measure false accept rate during ordinary conversation and media playback, and false reject rate for the wake phrase.
-- Test that a command spoken immediately after the wake phrase is fully preserved.
+- [x] Add bounded pre-roll and wake-word-to-ASR handoff with local silence endpoint; core JVM tests pass in run `44393655204`.
+- Test that a command spoken immediately after the wake phrase is fully preserved on physical devices.
 - Measure always-on CPU, memory, latency, and battery/power use.
 - Review the model, training-data, Sherpa engine, and Piper voice licences and attributions before redistribution.
 - Keep the feature opt-in until these tests pass.
