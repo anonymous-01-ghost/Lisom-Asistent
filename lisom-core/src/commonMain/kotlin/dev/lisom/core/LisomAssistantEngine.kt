@@ -135,7 +135,7 @@ class LisomAssistantEngine(
         released = true
         pushToTalkJob?.cancel()
         wakeWordJob?.cancel()
-        audioInput.stop()
+        audioInput.release()
         speechRecognizer.release()
         speechSynthesizer?.stop()
         scope.cancel()
