@@ -6,6 +6,7 @@ package dev.lisom.models
  */
 sealed interface LisomCommand {
     data class SearchMusic(val query: String) : LisomCommand
+    data class SearchLyrics(val phrase: String) : LisomCommand
     data class SearchArtist(val artist: String) : LisomCommand
     data class PlayArtist(val artist: String) : LisomCommand
     data class PlayTrack(val title: String, val artist: String? = null) : LisomCommand
