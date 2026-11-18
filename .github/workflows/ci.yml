@@ -24,5 +24,7 @@ jobs:
           gradle-version: "9.7.0"
       - name: Run NLU tests
         run: gradle :lisom-nlu:jvmTest
+      - name: Run speech contract tests
+        run: gradle :lisom-speech:jvmTest
       - name: Run JVM demo
         run: gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
