@@ -199,13 +199,13 @@ kotlin {
             implementation(project(":lisom-tts"))
         }
         androidMain.dependencies {
-            // The host receives the third-party AAR separately; it is compile-only here
-            // because AGP rejects embedding a direct local AAR into a published AAR.
-            compileOnly(files(sherpaAar))
+            // Resolve Sherpa as a normal Maven dependency so it is carried transitively
+            // into the host application's runtime classpath without nesting an AAR.
+            implementation("dev.lisom.thirdparty:sherpa-onnx-android:$sherpaVersion")
         }
         jvmMain.dependencies {
-            // Pinned upstream JVM API and Windows x64 native runtime; no runtime network access.
-            implementation(files(sherpaJvmJar, sherpaWindowsNativeJar))
+            // The JVM Sherpa API POM carries the matching Windows x64 native JAR transitively.
+            implementation("dev.lisom.thirdparty:sherpa-onnx-jvm:$sherpaVersion")
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies { implementation(kotlin("test")) }
