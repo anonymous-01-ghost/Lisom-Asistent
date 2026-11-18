@@ -10,6 +10,7 @@ import dev.lisom.speech.SpeechRecognizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -45,7 +46,7 @@ class SherpaMoonshineSpeechRecognizer(
             val maxSamples = 16_000 * maxUtteranceSeconds
             val samples = ArrayList<Float>(maxSamples.coerceAtMost(16_000 * 5))
 
-            audio.collect { frame ->
+            audio.takeWhile { !it.isEndOfStream }.collect { frame ->
                 if (!frame.isEndOfStream) {
                     require(frame.sampleRateHz == 16_000 && frame.channelCount == 1) {
                         "Sherpa adapter requires mono 16 kHz PCM."
