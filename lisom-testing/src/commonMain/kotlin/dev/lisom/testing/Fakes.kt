@@ -16,7 +16,10 @@ class FakeAudioInput : AudioInput {
     var isStarted: Boolean = false
         private set
     override suspend fun start() { isStarted = true }
-    override suspend fun stop() { isStarted = false }
+    override suspend fun stop() {
+        isStarted = false
+        mutableFrames.emit(PcmAudioFrame(samples = shortArrayOf(), isEndOfStream = true))
+    }
     fun emit(frame: PcmAudioFrame): Boolean = mutableFrames.tryEmit(frame)
 }
 
