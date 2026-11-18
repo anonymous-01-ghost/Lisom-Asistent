@@ -1,6 +1,6 @@
 # Sherpa-ONNX adapter implementation plan
 
-**Status:** Initial Android and Windows/JVM adapters are implemented. Android source compilation passed CI run `44383261711`; Windows source compilation and PCM tests are awaiting the newly added Windows CI job. Physical-device validation remains pending.
+**Status:** Initial Android and Windows/JVM adapters are implemented. Android source compilation passed CI run `44383261711`; Windows x64 adapter compilation and PCM conversion tests passed run `44387376519`. Physical-device validation remains pending.
 **Pinned engine candidate:** sherpa-onnx v2.0.1.
 **Constraint:** all audio capture and inference remain local; no cloud service, API key, hosted model, or paid runtime dependency.
 
@@ -55,7 +55,8 @@ Initial source is under `lisom-platform/src/jvmMain`:
 - Gradle extracts `sherpa-onnx-jni.dll` and `onnxruntime.dll` into `lisom-platform/build/third-party/sherpa-onnx-win-x64`.
 - The host JVM must be started with `-Djava.library.path` set to that directory before Sherpa classes are loaded.
 - The initial adapter supports Windows x64/AMD64 only. Windows ARM64 is not yet wired into the build.
-- The Windows CI job compiles the adapter and runs PCM conversion tests; physical microphone capture and model inference remain pending.
+- Windows CI run `44387376519` successfully compiled the adapter and executed the PCM conversion tests.
+- Physical microphone capture and Spanish-model inference remain pending.
 
 ## iOS/Kotlin Native
 
@@ -87,4 +88,4 @@ An adapter is complete only after:
 - lifecycle, latency, real-time-factor, memory, and package-size measurements;
 - recorded binary/model licenses and checksums.
 
-Android compilation is verified, and Windows implementation has been added, but neither platform is declared fully supported until all corresponding hardware, inference, lifecycle, and licensing gates pass.
+Android compilation and Windows adapter compilation are verified, but neither platform is declared fully supported until all corresponding hardware, inference, lifecycle, and licensing gates pass.
