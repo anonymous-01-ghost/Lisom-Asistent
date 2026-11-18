@@ -19,6 +19,10 @@ class SpanishRuleBasedInterpreterTest {
             LisomCommand.SearchArtist("shakira"),
             interpreter.interpret("Busca canciones de Shakira").command,
         )
+        assertEquals(
+            LisomCommand.PlayArtist("morat"),
+            interpreter.interpret("Quiero escuchar música de Morat").command,
+        )
     }
 
     @Test
