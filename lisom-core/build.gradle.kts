@@ -15,10 +15,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":lisom-api"))
-            implementation(project(":lisom-speech"))
-            implementation(project(":lisom-wakeword"))
-            implementation(project(":lisom-nlu"))
-            implementation(project(":lisom-tts"))
+            api(project(":lisom-speech"))
+            api(project(":lisom-wakeword"))
+            api(project(":lisom-nlu"))
+            api(project(":lisom-tts"))
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
