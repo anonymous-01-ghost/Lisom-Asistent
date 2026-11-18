@@ -1,14 +1,14 @@
 # Development roadmap
 
-## Phase 1 — Foundation (current)
+## Phase 1 — Foundation
 
 - [x] Create repository identity and product boundary.
 - [x] Establish Gradle multi-module structure.
 - [x] Define shared command, state, and public API contracts.
 - [x] Add the first deterministic Spanish NLU grammar.
 - [x] Add initial NLU unit tests and a JVM demo.
-- [ ] Run the build and tests on a configured developer machine.
-- [ ] Add Gradle wrapper files.
+- [x] Verify NLU tests and JVM demo in GitHub Actions (run for commit `596ccecf41743c787b134d9ca6039fdeadf7c3b0`).
+- [ ] Add and verify Gradle wrapper files.
 
 ## Phase 2 — Speech recognition
 
@@ -26,12 +26,13 @@
 - [ ] Implement audio pre-roll and handoff to ASR.
 - [ ] Measure false accepts, false rejects, CPU and battery use.
 
-## Phase 4 — NLU
+## Phase 4 — NLU (in progress)
 
-- [ ] Expand the Spanish grammar and test paraphrases.
-- [ ] Add entity extraction, normalization, and confidence thresholds.
+- [x] Expand the Spanish grammar and add paraphrase tests for playback, artist, track, playlist, lyrics, and volume intents.
+- [x] Normalize Spanish accents, punctuation, and whitespace before intent matching.
+- [ ] Add structured entity extraction and calibrated confidence thresholds.
 - [ ] Add locale and language configuration.
-- [ ] Keep an explicit unknown-intent result.
+- [x] Keep an explicit unknown-intent result for unsupported or out-of-range requests.
 
 ## Phase 5 — TTS
 
@@ -53,4 +54,4 @@
 - [ ] Complete dependency, model, and licence review.
 - [ ] Add reproducible CI builds and compatibility tests.
 
-Lynox Music may later consume the published SDK, but no Lynox Music code belongs in this repository.
+Lisom Play is the first host application. It may consume this SDK later, but no Lisom Play code belongs in this repository.
