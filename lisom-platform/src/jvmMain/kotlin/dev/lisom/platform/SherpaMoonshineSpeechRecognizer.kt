@@ -68,7 +68,7 @@ class SherpaMoonshineSpeechRecognizer(
                 val engine = recognizer ?: createRecognizer().also { recognizer = it }
                 val stream = engine.createStream()
                 try {
-                    stream.acceptWaveform(samples.toFloatArray(), sampleRate = 16_000)
+                    stream.acceptWaveform(samples.toFloatArray(), 16_000)
                     engine.decode(stream)
                     val transcript = engine.getResult(stream).text.trim()
                     SpeechRecognitionResult(
@@ -115,18 +115,20 @@ class SherpaMoonshineSpeechRecognizer(
             }
         }
 
-        val modelConfig = OfflineModelConfig(
-            moonshine = OfflineMoonshineModelConfig(
-                encoder = encoder.absolutePath,
-                mergedDecoder = decoder.absolutePath,
-            ),
-            tokens = tokens.absolutePath,
-            numThreads = numThreads,
-            provider = "cpu",
-        )
-        return OfflineRecognizer(
-            config = OfflineRecognizerConfig(modelConfig = modelConfig),
-        )
+        val moonshineConfig = OfflineMoonshineModelConfig.builder()
+            .setEncoder(encoder.absolutePath)
+            .setMergedDecoder(decoder.absolutePath)
+            .build()
+        val modelConfig = OfflineModelConfig.builder()
+            .setMoonshine(moonshineConfig)
+            .setTokens(tokens.absolutePath)
+            .setNumThreads(numThreads)
+            .setProvider("cpu")
+            .build()
+        val recognizerConfig = OfflineRecognizerConfig.builder()
+            .setOfflineModelConfig(modelConfig)
+            .build()
+        return OfflineRecognizer(recognizerConfig)
     }
 
     override suspend fun release() = recognizerMutex.withLock {
