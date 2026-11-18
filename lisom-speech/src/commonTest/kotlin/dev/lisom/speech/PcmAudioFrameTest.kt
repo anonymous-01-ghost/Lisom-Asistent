@@ -18,6 +18,13 @@ class PcmAudioFrameTest {
     }
 
     @Test
+    fun acceptsEndOfStreamMarkerWithoutSamples() {
+        val frame = PcmAudioFrame(samples = shortArrayOf(), isEndOfStream = true)
+        assertEquals(true, frame.isEndOfStream)
+        assertEquals(0, frame.samples.size)
+    }
+
+    @Test
     fun rejectsEmptyFrames() {
         assertFailsWith<IllegalArgumentException> {
             PcmAudioFrame(samples = shortArrayOf())
