@@ -2,7 +2,7 @@
 
 ## Configuration
 
-`LisomConfig` defaults to Spanish (Peru), 16 kHz mono input, push-to-talk, optional wake-word activation, and mandatory offline execution. The constructor rejects an online configuration.
+`LisomConfig` defaults to Spanish (Peru), 16 kHz mono input, push-to-talk, optional wake-word activation, mandatory offline execution, and a 0.70 minimum NLU confidence threshold. The constructor rejects an online configuration and invalid thresholds. The bundled Spanish interpreter supports `es`, `es-PE`, `es-MX`, and `es-ES`; unsupported configured locales fail during initialization.
 
 ## Host integration
 
@@ -38,6 +38,17 @@ lisom.commands.collect { recognized ->
 ```
 
 The example describes the host-side responsibility; `hostSearchAndPlay`, `hostPlayTrack`, `hostSearch`, `hostSearchLyrics`, `hostSetVolume`, `hostPlayer`, and `hostLyrics` belong to the integrating application and are not part of this repository.
+
+## Offline TTS adapters
+
+The public engine accepts a SpeechSynthesizer implementation. Android and Windows/JVM provide local Sherpa Piper/VITS adapters that require a host-installed model directory containing the selected .onnx voice, tokens.txt, and espeak-ng-data. The adapter accepts an optional expectedModelSha256 so the host can reject a changed model before native initialization.
+
+The host also chooses the audio sink:
+
+- Android: AndroidPcmAudioOutput backed by AudioTrack.
+- Windows/JVM: JvmPcmAudioOutput backed by SourceDataLine.
+
+The SDK never downloads the model or sends text/audio to a remote service. The provisional voice candidate is vits-piper-es_MX-claude-high; its licence and physical-device quality still require release validation.
 
 ## Command model
 

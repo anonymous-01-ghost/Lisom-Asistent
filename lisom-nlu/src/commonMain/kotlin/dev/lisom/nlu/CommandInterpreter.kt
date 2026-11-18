@@ -3,6 +3,13 @@ package dev.lisom.nlu
 import dev.lisom.models.LisomCommand
 
 fun interface CommandInterpreter {
+    /**
+     * Declared locale support. An empty set means the host interpreter accepts
+     * the configured language itself.
+     */
+    val supportedLanguageTags: Set<String>
+        get() = emptySet()
+
     fun interpret(text: String): InterpretationResult
 }
 

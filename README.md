@@ -1,7 +1,7 @@
 # Lisom Assistant SDK
 
 **Version:** 0.1.0-SNAPSHOT  
-**Status:** Android/Windows offline ASR and experimental KWS adapters implemented; hardware validation pending  
+**Status:** Android/Windows offline ASR, experimental KWS, and local TTS adapters implemented; hardware validation pending
 **Technology:** Kotlin Multiplatform  
 **Runtime processing:** Local and offline-only
 
@@ -39,6 +39,7 @@ Lisom Assistant is an embeddable voice-engine SDK for applications that need loc
 - Android microphone capture using `AudioRecord`, plus a Sherpa-ONNX Moonshine v2 adapter.
 - Windows/JVM microphone capture using Java Sound, plus a Sherpa-ONNX Moonshine v2 adapter targeting Windows x64.
 - Experimental Spanish open-vocabulary wake-word adapters for Android and Windows/JVM, using local Sherpa Zipformer KWS assets and a generated `oye lisom` keyword list.
+- Local Sherpa Piper/VITS TTS adapters for Android and Windows/JVM, with host-supplied model files and platform PCM output sinks.
 - A bounded 1.6-second wake-word pre-roll relay and local silence endpoint that hand the same microphone stream to ASR without reopening the microphone.
 - Pinned Android, JVM and Windows native Sherpa artifacts with SHA-256 verification during build.
 - GitHub Actions checks for shared JVM/NLU logic, Android source compilation, and Windows x64 ASR/KWS adapter compilation and PCM tests.
@@ -49,7 +50,7 @@ Android source compilation passed in run `44383261711`. Windows x64 adapter comp
 
 - Physical-device audio capture and airplane-mode ASR validation for Android and Windows.
 - Validation of the provisional local **Oye Lisom** wake-word model on Peruvian Spanish voices, fast-following command preservation, noise conditions, and false-trigger rates.
-- Offline Spanish TTS.
+- Physical-device validation of offline Spanish TTS voice quality, interruption, and audio output lifecycle.
 - iOS native implementation and compilation with macOS/Xcode.
 - Dependency and model licence review, final distribution licence, and Gradle Wrapper.
 

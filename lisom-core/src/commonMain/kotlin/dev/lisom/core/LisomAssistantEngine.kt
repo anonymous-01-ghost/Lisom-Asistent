@@ -21,7 +21,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -58,6 +57,7 @@ class LisomAssistantEngine(
         check(!released) { "Lisom Assistant has already been released." }
         if (initialized) return@withLock
         check(config.offlineRequired) { "Online processing is not supported." }
+        checkLanguageSupport()
         initialized = true
         mutableState.value = LisomAssistantState.Ready
     }
@@ -172,7 +172,7 @@ class LisomAssistantEngine(
             wakeWordJob?.cancelAndJoin()
             audioInput.release()
             speechRecognizer.release()
-            speechSynthesizer?.stop()
+            speechSynthesizer?.release()
             scope.cancel()
             mutableState.value = LisomAssistantState.Closed
         }
@@ -181,25 +181,46 @@ class LisomAssistantEngine(
     private suspend fun processTranscript(transcript: String, confidence: Float?) {
         mutableState.value = LisomAssistantState.Processing
         val interpretation = commandInterpreter.interpret(transcript)
-        val command = interpretation.command
+        val command = interpretation.command?.takeIf {
+            interpretation.confidence >= config.minimumNluConfidence
+        }
         if (command != null && transcript.isNotBlank()) {
             mutableCommands.emit(
                 RecognizedCommand(
                     command = command,
                     transcript = transcript,
                     confidence = confidence,
+                    nluConfidence = interpretation.confidence,
                 ),
             )
         }
         if (!released) mutableState.value = LisomAssistantState.Ready
     }
 
-    private suspend fun ensureInitialized() {
+    private fun ensureInitialized() {
         check(!released) { "Lisom Assistant has already been released." }
         if (!initialized) {
             check(config.offlineRequired) { "Online processing is not supported." }
+        checkLanguageSupport()
             initialized = true
             mutableState.value = LisomAssistantState.Ready
+        }
+    }
+
+    private fun checkLanguageSupport() {
+        val supported = commandInterpreter.supportedLanguageTags
+        if (supported.isEmpty()) return
+
+        val configured = config.languageTag.lowercase()
+        val configuredBase = configured.substringBefore('-')
+        check(
+            supported.any { tag ->
+                val normalized = tag.lowercase()
+                normalized == configured || normalized == configuredBase
+            },
+        ) {
+            "No local command interpreter supports languageTag=" + config.languageTag + ". " +
+                "Supported tags: " + supported.joinToString()
         }
     }
 

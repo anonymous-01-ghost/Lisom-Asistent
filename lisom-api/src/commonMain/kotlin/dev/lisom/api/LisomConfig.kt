@@ -6,6 +6,7 @@ data class LisomConfig(
     val pushToTalkEnabled: Boolean = true,
     val wakeWordEnabled: Boolean = true,
     val offlineRequired: Boolean = true,
+    val minimumNluConfidence: Float = 0.70f,
     val sampleRateHz: Int = 16_000,
 ) {
     init {
@@ -13,6 +14,9 @@ data class LisomConfig(
         require(wakeWordPhrase.isNotBlank()) { "wakeWordPhrase cannot be blank." }
         require(pushToTalkEnabled || wakeWordEnabled) { "At least one activation method must be enabled." }
         require(offlineRequired) { "Lisom Assistant only supports mandatory offline processing." }
+        require(minimumNluConfidence in 0f..1f) {
+            "minimumNluConfidence must be between 0 and 1."
+        }
         require(sampleRateHz == 16_000) { "The initial audio pipeline requires 16 kHz PCM input." }
     }
 }

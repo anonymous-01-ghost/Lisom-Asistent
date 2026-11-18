@@ -40,6 +40,12 @@ https://k2-fsa.github.io/sherpa/onnx/moonshine/models-v2.html
 
 **Important:** the model's bundled LICENSE must be reviewed before redistribution. No model files are committed to this SDK repository.
 
+## Provisional Spanish TTS candidate
+
+Use Sherpa-ONNX Piper/VITS model `vits-piper-es_MX-claude-high` as the first Spanish voice candidate. The official Sherpa model page provides the release archive and sample configuration; the model and its espeak-ng data remain host-supplied local assets. The upstream Piper voice repository is marked MIT, while the model card identifies the training dataset as Apache-2.0; redistribution notices and the exact model archive terms still require a formal review before shipping. See the [Piper voice repository](https://huggingface.co/rhasspy/piper-voices/tree/main/es/es_MX/claude/high) and [model card](https://huggingface.co/rhasspy/piper-voices/blob/main/es/es_MX/claude/high/MODEL_CARD).
+
+The adapter expects the model directory to contain the `.onnx` voice, `tokens.txt`, and `espeak-ng-data`. Android and Windows/JVM adapters now generate normalized mono PCM locally and send it to platform audio sinks. They also accept an optional SHA-256 pin for the model file. This is an implementation milestone, not physical-device validation.
+
 ## Target integration strategy
 
 | Target | Candidate packaging strategy | Remaining validation |

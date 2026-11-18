@@ -43,6 +43,12 @@ class FakeSpeechSynthesizer : SpeechSynthesizer {
     val spokenTexts = mutableListOf<String>()
     var stopped: Boolean = false
         private set
+    var released: Boolean = false
+        private set
     override suspend fun speak(text: String) { spokenTexts += text }
     override suspend fun stop() { stopped = true }
+    override suspend fun release() {
+        released = true
+        stopped = true
+    }
 }

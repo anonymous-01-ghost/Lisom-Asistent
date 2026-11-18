@@ -9,6 +9,12 @@ import dev.lisom.models.LisomCommand
  * the host application remains responsible for executing recognized commands.
  */
 class SpanishRuleBasedInterpreter : CommandInterpreter {
+    override val supportedLanguageTags: Set<String> = setOf(
+        "es",
+        "es-PE",
+        "es-MX",
+        "es-ES",
+    )
     override fun interpret(text: String): InterpretationResult {
         val normalized = normalize(text)
         if (normalized.isBlank()) return InterpretationResult(null, normalized, 0f, "empty_input")
