@@ -74,9 +74,6 @@ class SpanishRuleBasedInterpreter : CommandInterpreter {
                 parseTrack(normalized.removePrefix("pon la cancion "))
             normalized.startsWith("pon cancion ") ->
                 parseTrack(normalized.removePrefix("pon cancion "))
-            normalized.startsWith("quiero escuchar ") ->
-                parseTrack(normalized.removePrefix("quiero escuchar "))
-
             normalized.startsWith("busca canciones de ") ->
                 normalized.removePrefix("busca canciones de ").takeIf(String::isNotBlank)?.let(LisomCommand::SearchArtist)
             normalized.startsWith("busca artista ") ->
@@ -92,6 +89,8 @@ class SpanishRuleBasedInterpreter : CommandInterpreter {
                 normalized.removePrefix("pon canciones de ").takeIf(String::isNotBlank)?.let(LisomCommand::PlayArtist)
             normalized.startsWith("quiero escuchar musica de ") ->
                 normalized.removePrefix("quiero escuchar musica de ").takeIf(String::isNotBlank)?.let(LisomCommand::PlayArtist)
+            normalized.startsWith("quiero escuchar ") ->
+                parseTrack(normalized.removePrefix("quiero escuchar "))
 
             normalized.startsWith("busca ") ->
                 normalized.removePrefix("busca ").takeIf(String::isNotBlank)?.let(LisomCommand::SearchMusic)
