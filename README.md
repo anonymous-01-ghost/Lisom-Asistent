@@ -1,7 +1,7 @@
 # Lisom Assistant SDK
 
 **Version:** 0.1.0-SNAPSHOT  
-**Status:** Phase 1 foundation  
+**Status:** Offline ASR adapters in progress  
 **Technology:** Kotlin Multiplatform  
 **Runtime processing:** Local and offline-only
 
@@ -28,41 +28,51 @@ Lisom Assistant is an embeddable voice-engine SDK for applications that need loc
 | `lisom-wakeword` | Local keyword detection contract |
 | `lisom-nlu` | Deterministic Spanish command interpreter |
 | `lisom-tts` | Offline speech synthesis contract |
-| `lisom-platform` | Platform identification and native adapter boundary |
+| `lisom-platform` | Native microphone and ASR adapters |
 | `lisom-testing` | Fakes for tests |
 | `lisom-demo` | Small JVM NLU demo; not a host application |
 
-## Implemented in this foundation
+## Implemented
 
-- Multi-module Gradle project and version catalog.
-- Common command/state models and public API.
-- Offline-only configuration guard.
-- Audio, ASR, wake-word, and TTS interfaces.
-- Reference core coordinator with dependency injection.
-- Initial Spanish rule-based NLU and unit tests.
-- JVM command-line demo and CI workflow.
+- Multi-module Kotlin Multiplatform foundation and shared public contracts.
+- Offline-only configuration guard and deterministic Spanish command interpreter with tests.
+- Android microphone capture using `AudioRecord`, plus a Sherpa-ONNX Moonshine v2 adapter.
+- Windows/JVM microphone capture using Java Sound, plus a Sherpa-ONNX Moonshine v2 adapter targeting Windows x64.
+- Pinned Android, JVM and Windows native Sherpa artifacts with SHA-256 verification during build.
+- GitHub Actions jobs for shared JVM/NLU checks, Android compilation, and Windows/JVM adapter tests.
 
-## Not implemented yet
+Android adapter compilation passed in GitHub Actions run `44383261711`. Windows adapter compilation and tests are being validated by the Windows CI job. Neither platform is declared fully supported until physical-device microphone tests and offline Spanish inference succeed.
 
-No production microphone capture, Sherpa-ONNX binding, trained "Oye Lisom" model, VAD/endpointing engine, or offline TTS provider is included yet. Platform source sets currently identify the runtime but do not access the microphone. These features are next engineering phases, not capabilities being claimed as complete.
+## Still pending
+
+- Physical-device audio capture and airplane-mode ASR validation for Android and Windows.
+- A trained local **Oye Lisom** wake-word model and robust handoff to ASR.
+- Offline Spanish TTS.
+- iOS native implementation and compilation with macOS/Xcode.
+- Dependency and model licence review, final distribution licence, and Gradle Wrapper.
 
 ## Build requirements
 
 - JDK 17+
 - Gradle 9.7.0
 - Android SDK 36 for Android target builds
+- Windows x64 for the current Windows native runtime
 - macOS with Xcode 26.4 for iOS native builds
 
-The pinned combination is Kotlin 2.4.21 and Android Gradle Plugin 9.3.1. Gradle 9.7.0 is selected to stay within the published Kotlin Multiplatform compatibility range.
+The pinned combination is Kotlin 2.4.21 and Android Gradle Plugin 9.3.1.
 
-## Run on Windows
+## Run checks on Windows
 
 After cloning the private repository and installing JDK 17 and Gradle 9.7.0:
 
 ```powershell
 gradle :lisom-nlu:jvmTest
+gradle :lisom-speech:jvmTest
+gradle :lisom-platform:jvmTest
 gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
 ```
+
+For Windows Sherpa native runtime preparation and JVM launch configuration, see [Windows ASR](docs/WINDOWS_ASR.md).
 
 ## Documentation
 
@@ -71,6 +81,8 @@ gradle :lisom-demo:run --args="Oye Lisom reproduce música de Morat"
 - [Installation](docs/INSTALLATION.md)
 - [Platform support](docs/PLATFORM_SUPPORT.md)
 - [Offline mode](docs/OFFLINE_MODE.md)
+- [Android ASR](docs/ANDROID_ASR.md)
+- [Windows ASR](docs/WINDOWS_ASR.md)
 - [Roadmap](docs/ROADMAP.md)
 
 ## Licensing
