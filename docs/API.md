@@ -12,9 +12,31 @@ The SDK exposes `LisomAssistant`:
 - `startPushToTalk()` / `stopPushToTalk()`
 - `enableWakeWord()` / `disableWakeWord()`
 - `speak(text)`
+- `stopSpeaking()`
 - `release()`
 - `state: StateFlow<LisomAssistantState>`
 - `commands: Flow<RecognizedCommand>`
+
+The host creates the engine by injecting platform audio and local Sherpa adapters. For Android, the wiring looks like this (the host supplies the local model directories):
+
+```kotlin
+val assistant = LisomAssistantEngine(
+    config = LisomConfig(languageTag = "es-PE"),
+    audioInput = AndroidAudioInput(context),
+    speechRecognizer = SherpaMoonshineSpeechRecognizer(asrModelDirectory),
+    commandInterpreter = SpanishRuleBasedInterpreter(),
+    wakeWordDetector = SherpaZipformerWakeWordDetector(kwsModelDirectory),
+    speechSynthesizer = SherpaPiperSpeechSynthesizer(
+        modelDirectory = ttsModelDirectory,
+        audioOutput = AndroidPcmAudioOutput(),
+        modelFileName = ttsModelFileName,
+    ),
+)
+assistant.initialize()
+assistant.enableWakeWord()
+```
+
+For Windows/JVM, use `WindowsAudioInput`, the JVM Sherpa adapters, and `JvmPcmAudioOutput`; start the host JVM with `java.library.path` set to the extracted Sherpa DLL directory. Push-to-talk hosts call `startPushToTalk()` on button press and `stopPushToTalk()` on release. Call `stopSpeaking()` to interrupt spoken output and `release()` when the host is shutting down.
 
 The host collects typed commands:
 
