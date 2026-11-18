@@ -10,6 +10,9 @@ interface AudioInput {
     val frames: Flow<PcmAudioFrame>
     suspend fun start()
     suspend fun stop()
+
+    /** Releases capture resources. Default implementations stop the current session. */
+    suspend fun release() = stop()
 }
 
 /**
