@@ -47,23 +47,21 @@ class PcmUtteranceFlowTest {
     @Test
     fun boundsUtteranceByMaximumDuration() = runBlocking {
         val first = PcmAudioFrame(
-            samples = ShortArray(1_000) { 2_000 },
-            sampleRateHz = 1_000,
+            samples = ShortArray(16_000) { 2_000 },
         )
         val second = PcmAudioFrame(
-            samples = ShortArray(1_000) { 2_000 },
-            sampleRateHz = 1_000,
+            samples = ShortArray(16_000) { 2_000 },
         )
 
         val result = flowOf(first, second)
             .untilSpeechEndpoint(
-                sampleRateHz = 1_000,
+                sampleRateHz = 16_000,
                 maxUtteranceSeconds = 1,
             )
             .toList()
 
         assertEquals(2, result.size)
-        assertEquals(1_000, result.first().samples.size)
+        assertEquals(16_000, result.first().samples.size)
         assertTrue(result.last().isEndOfStream)
     }
 }
