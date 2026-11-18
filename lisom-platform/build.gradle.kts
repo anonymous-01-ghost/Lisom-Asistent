@@ -194,9 +194,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":lisom-api"))
-            implementation(project(":lisom-speech"))
-            implementation(project(":lisom-wakeword"))
-            implementation(project(":lisom-tts"))
+            api(project(":lisom-speech"))
+            api(project(":lisom-wakeword"))
+            api(project(":lisom-tts"))
         }
         androidMain.dependencies {
             // Keep the third-party AAR separate; the host app adds it as a Maven dependency.
