@@ -42,3 +42,33 @@ The provisional model archive is documented by [Sherpa-ONNX](https://k2-fsa.gith
 ## Runtime network policy
 
 Gradle may need network access during the first build to retrieve build plugins and dependencies. That is build-time tooling only. Lisom's runtime audio, ASR, wake-word detection, NLU, and TTS are required to run locally without Internet access.
+
+## Host application: Sherpa native dependencies
+
+The SDK prepares the pinned Sherpa binaries as a separate local Maven repository under `build/repository`. This keeps native artifacts separate from the Lisom platform library instead of nesting an AAR inside another AAR.
+
+Prepare the required repository on the development machine:
+
+```powershell
+.\gradlew.bat :lisom-platform:prepareSherpaAndroidMaven
+.\gradlew.bat :lisom-platform:prepareSherpaWindowsMaven
+```
+
+In the host application's `settings.gradle.kts`, add the generated repository (adjust the path to the location of the SDK checkout):
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        maven { url = uri("../Lisom-Asistent/build/repository") }
+        google()
+        mavenCentral()
+    }
+}
+```
+
+Add the matching dependency to the host application:
+
+- Android: `implementation("dev.lisom.thirdparty:sherpa-onnx-android:2.0.1")`
+- Windows/JVM: `implementation("dev.lisom.thirdparty:sherpa-onnx-jvm:2.0.1")`
+
+The Windows JVM POM declares the matching Windows x64 native JAR transitively. The host must still extract the DLLs using `:lisom-platform:prepareSherpaWindowsNativeRuntime` and launch its JVM with the resulting directory on `java.library.path`. These are build-time/local dependencies; speech inference remains offline.

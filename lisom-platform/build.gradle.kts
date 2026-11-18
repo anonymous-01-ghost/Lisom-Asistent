@@ -199,13 +199,12 @@ kotlin {
             implementation(project(":lisom-tts"))
         }
         androidMain.dependencies {
-            // Resolve Sherpa as a normal Maven dependency so it is carried transitively
-            // into the host application's runtime classpath without nesting an AAR.
-            implementation("dev.lisom.thirdparty:sherpa-onnx-android:$sherpaVersion")
+            // Keep the third-party AAR separate; the host app adds it as a Maven dependency.
+            compileOnly(files(sherpaAar))
         }
         jvmMain.dependencies {
-            // The JVM Sherpa API POM carries the matching Windows x64 native JAR transitively.
-            implementation("dev.lisom.thirdparty:sherpa-onnx-jvm:$sherpaVersion")
+            // The host app adds the published Sherpa JVM/native artifacts to its runtime.
+            implementation(files(sherpaJvmJar, sherpaWindowsNativeJar))
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies { implementation(kotlin("test")) }
