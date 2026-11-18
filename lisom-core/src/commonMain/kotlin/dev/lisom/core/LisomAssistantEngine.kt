@@ -12,6 +12,7 @@ import dev.lisom.tts.SpeechSynthesizer
 import dev.lisom.wakeword.WakeWordDetector
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -109,12 +110,14 @@ class LisomAssistantEngine(
                         extraBufferCapacity = WAKE_WORD_PREROLL_FRAMES,
                     )
 
-                    audioInput.start()
-                    val relayJob = scope.launch {
+                    // Subscribe to the hot microphone flow before opening the device. This
+                    // avoids losing the first audio frames during microphone startup.
+                    val relayJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
                         audioInput.frames.collect { frame -> routedFrames.emit(frame) }
                     }
 
                     try {
+                        audioInput.start()
                         // first() stops the keyword detector as soon as one wake event is emitted.
                         detector.observe(routedFrames).first()
                         if (released || !currentCoroutineContext().isActive) break
