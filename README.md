@@ -1,7 +1,7 @@
 # Lisom Assistant SDK
 
 **Version:** 0.1.0-SNAPSHOT  
-**Status:** Offline ASR adapters in progress  
+**Status:** Offline ASR adapters implemented; hardware validation pending  
 **Technology:** Kotlin Multiplatform  
 **Runtime processing:** Local and offline-only
 
@@ -39,9 +39,9 @@ Lisom Assistant is an embeddable voice-engine SDK for applications that need loc
 - Android microphone capture using `AudioRecord`, plus a Sherpa-ONNX Moonshine v2 adapter.
 - Windows/JVM microphone capture using Java Sound, plus a Sherpa-ONNX Moonshine v2 adapter targeting Windows x64.
 - Pinned Android, JVM and Windows native Sherpa artifacts with SHA-256 verification during build.
-- GitHub Actions jobs for shared JVM/NLU checks, Android compilation, and Windows/JVM adapter tests.
+- GitHub Actions checks for shared JVM/NLU logic, Android source compilation, and Windows x64 adapter compilation/PCM tests.
 
-Android adapter compilation passed in GitHub Actions run `44383261711`. Windows adapter compilation and tests are being validated by the Windows CI job. Neither platform is declared fully supported until physical-device microphone tests and offline Spanish inference succeed.
+Android source compilation passed in run `44383261711`. Windows x64 adapter compilation and PCM conversion tests passed in run `44387376519`. Neither platform is declared fully supported until physical microphone tests and offline Spanish inference succeed.
 
 ## Still pending
 
