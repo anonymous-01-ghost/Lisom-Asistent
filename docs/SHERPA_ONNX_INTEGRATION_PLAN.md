@@ -1,6 +1,6 @@
 # Sherpa-ONNX Integration Plan
 
-Status: implementation design; no native runtime or model is bundled yet.
+**Status:** Initial Android and Windows/JVM offline ASR adapters have been added. Android source compilation passed CI run `44383261711`; Windows/JVM compilation and PCM tests are awaiting Windows CI validation. Physical-device ASR validation is pending.
 
 ## Goal
 
@@ -16,62 +16,65 @@ interface SpeechRecognizer {
 }
 ```
 
-Platform-specific code must implement this contract. Do not expose Sherpa-ONNX types in `lisom-api`, `lisom-models`, or common source sets. Keep the existing command interpreter and host-app command API independent from the ASR engine.
+Platform-specific code implements this contract. Sherpa-ONNX types remain out of `lisom-api`, `lisom-models`, and common source sets. Keep the command interpreter and host-app command API independent from the ASR engine.
 
-## Proposed module split
+## Current adapters
 
-- `lisom-speech`: common audio frame, recognizer contract, result and lifecycle abstractions.
-- `lisom-speech-sherpa`: shared adapter configuration and model metadata only, if these can remain dependency-free.
-- Android source set/adapter: package the compatible Sherpa Android AAR and JNI libraries; create and release recognizer instances on a controlled dispatcher.
-- JVM/Windows adapter: use the compatible Sherpa JVM API plus matching Windows native runtime artifacts. Verify x64/arm64 support before publishing.
-- iOS adapter: use Sherpa C API/framework built for device and simulator, bridged through Kotlin/Native cinterop. This target must be built and tested on macOS with Xcode; it cannot be validated from a Windows-only environment.
+- Android: `AndroidAudioInput` uses `AudioRecord`; `SherpaMoonshineSpeechRecognizer` uses Sherpa-ONNX 2.0.1 through the Android AAR.
+- Windows/JVM: `WindowsAudioInput` uses Java Sound; `SherpaMoonshineSpeechRecognizer` uses the Sherpa JVM API and Windows x64 native libraries.
+- Both recognizers use the Spanish Moonshine v2 model from local files, CPU inference, bounded utterances, and a shared end-of-stream marker.
+- Native engine artifacts are pinned by SHA-256 and downloaded only during builds. No model is downloaded by the SDK, and no audio is uploaded.
 
-Do not put Android AAR or desktop native binaries in commonMain. Keep each native dependency in its platform source set or dedicated platform module.
+The Windows host JVM must be launched with `-Djava.library.path` set to the extracted Sherpa DLL directory. See [WINDOWS_ASR.md](WINDOWS_ASR.md).
 
-## Audio contract requirements
+## Proposed platform boundaries
 
-Before wiring a native recognizer, make the PCM contract explicit and test it:
+- `lisom-speech`: common audio-frame, recognizer contract, result, and lifecycle abstractions.
+- Android source set: Android microphone and Sherpa AAR bindings.
+- JVM source set: Java Sound microphone and Sherpa JVM/native bindings for Windows x64.
+- iOS source set: Sherpa C API/framework built for device and simulator, bridged through Kotlin/Native cinterop. This requires macOS and Xcode.
 
-- signed 16-bit little-endian PCM;
-- mono channel;
-- fixed sample rate selected to match the chosen model (do not silently resample);
-- frame timestamps or a documented continuous-stream ordering guarantee;
-- bounded frame sizes and back-pressure;
-- explicit end-of-utterance/cancellation behavior;
-- deterministic release of native streams and recognizer handles.
+Do not put Android AAR or desktop native binaries in `commonMain`. Keep every native dependency in its platform source set or dedicated platform module.
 
-If current `PcmAudioFrame` does not encode these properties, extend it compatibly before integrating a model. Do not infer sample rate or channel count from the byte array.
+## Audio contract
+
+The common PCM contract is mono, signed 16-bit samples at 16 kHz. Platform adapters must preserve these properties and must not silently resample. Audio delivery must provide bounded frames, a documented continuous ordering guarantee, back-pressure behavior, and explicit end-of-utterance/cancellation semantics. Missing sample-rate or channel metadata must never be guessed from the audio buffer.
 
 ## Recognition pipeline
 
-1. Platform microphone capture obtains permission and produces the documented PCM format.
-2. Optional local VAD/endpointing determines when an utterance is complete.
-3. The platform adapter feeds PCM frames to Sherpa-ONNX.
-4. The adapter returns `SpeechRecognitionResult` with normalized text, language tag and a calibrated confidence value.
-5. Existing common NLU converts text into `RecognizedCommand`.
-6. The host app executes commands through its own playback/catalog/lyrics interfaces.
+1. Platform microphone capture obtains the required permission and produces the documented PCM format.
+2. Push-to-talk stop emits an explicit end-of-stream marker.
+3. The platform adapter validates and buffers one bounded utterance.
+4. Sherpa-ONNX runs offline inference against the locally installed Spanish model.
+5. The adapter returns text and language. Confidence remains `null` because the selected result does not expose a calibrated score.
+6. Existing common NLU converts text into `RecognizedCommand`.
+7. The host app executes commands through its own playback, catalogue, and lyrics interfaces.
 
-The recognizer must not access the network. Model loading should accept an app-provided local file/resource path; do not auto-download models at runtime.
+The recognizer must not access the network. The host or an explicit setup flow installs model files locally and passes their path to the adapter.
 
 ## Model and licensing gate
 
-The Spanish Moonshine model previously evaluated is only a candidate, not an approved dependency. Before shipping it, record the exact model revision, source URL, checksum, model license, redistribution terms, size, supported sample rate, and measured Spanish recognition quality. Review the model license separately from the Sherpa-ONNX library license.
+The Spanish Moonshine model previously evaluated remains a candidate, not an approved dependency. Before shipping, record the exact model revision, source URL, checksum, model license, redistribution terms, size, supported sample rate, and measured Spanish recognition quality. Review the model license separately from the Sherpa-ONNX engine and native binary licences.
 
-Do not commit model binaries or native runtime binaries to this repository. Document how the consuming app supplies the model asset and how packaging/licensing notices are delivered.
+Do not commit model binaries or native runtime binaries to this repository. Document how the consuming app supplies model assets and delivers required notices.
 
 ## Validation gates
 
-- Unit tests: PCM validation, frame ordering, cancellation, empty audio, confidence bounds, resource cleanup.
+- Unit tests: PCM validation and conversion, frame ordering, cancellation, empty audio, confidence bounds, and resource cleanup.
 - Android: physical-device microphone capture and offline recognition with airplane mode enabled.
-- Windows: JVM/native loading and offline recognition on a supported Windows architecture.
+- Windows: Windows x64 microphone capture, native DLL loading, and offline recognition on a clean machine.
 - iOS: device and simulator builds on macOS; on-device offline recognition and lifecycle tests.
-- Quality: Spanish test corpus with word error rate, latency, memory, cold-start time, and false activation measurements.
-- CI: keep common/JVM tests green; add platform jobs only when their toolchains and native artifacts are reproducibly available.
+- Quality: Spanish command corpus with transcript assertions, latency, real-time factor, memory, cold-start time, and false activation measurements.
+- CI: keep common/JVM tests green and build platform adapters using pinned native artifacts.
 
 ## Wake word and TTS are separate milestones
 
-A working ASR adapter does not implement the exact wake phrase `Oye Lisom`. Keyword spotting needs a dedicated local model and false-accept/false-reject evaluation. Likewise, offline TTS requires its own Spanish voice/model and license review. Neither feature should be marked complete merely because Sherpa-ONNX is present.
+A working ASR adapter does not implement the exact wake phrase `Oye Lisom`. Keyword spotting needs a dedicated local model and false-accept/false-reject evaluation. Offline TTS requires its own Spanish voice/model and licence review. Neither feature should be marked complete merely because Sherpa-ONNX is present.
 
 ## Current limitations
 
-This design does not claim that microphone capture, Sherpa inference, wake-word detection, or TTS is implemented. The next coding milestone is to formalize and test the PCM frame contract, then implement and validate Android first, followed by Windows. iOS requires a macOS/Xcode build environment.
+- Android has passed source compilation but not physical microphone/model validation.
+- Windows implementation and CI are in place, but the Windows CI result and target-hardware validation remain pending.
+- Both ASR adapters currently decode complete utterances after push-to-talk ends; partial streaming transcripts are not produced.
+- No wake-word model, post-keyword speech handoff, offline TTS engine, or iOS native adapter is approved yet.
+- Sherpa engine and model licensing must be reviewed before redistribution.
