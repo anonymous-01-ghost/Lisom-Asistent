@@ -180,7 +180,8 @@ kotlin {
             api(project(":lisom-tts"))
         }
         androidMain.dependencies {
-            compileOnly(files(sherpaAar))
+            // Resolve Sherpa through the prepared Maven repository, not as a raw local AAR file.
+            compileOnly("dev.lisom.thirdparty:sherpa-onnx-android:$sherpaVersion")
         }
         jvmMain.dependencies {
             implementation(files(sherpaJvmJar, sherpaWindowsNativeJar))
@@ -192,6 +193,8 @@ kotlin {
 
 tasks.configureEach {
     when {
+        // Android's annotation extractor resolves androidCompileClasspath before compileAndroidMain.
+        name == "extractAndroidMainAnnotations" -> dependsOn(prepareSherpaAndroidMaven)
         name.contains("compile", ignoreCase = true) &&
             name.contains("Android", ignoreCase = true) -> dependsOn(prepareSherpaAndroidMaven)
         name == "compileKotlinJvm" -> dependsOn(prepareSherpaWindowsMaven)
