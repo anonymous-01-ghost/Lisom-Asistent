@@ -17,12 +17,17 @@ allprojects {
 subprojects {
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
         apply(plugin = "maven-publish")
-
         extensions.configure<PublishingExtension> {
             repositories {
                 maven {
-                    name = "buildRepository"
-                    url = rootProject.layout.buildDirectory.dir("repository").get().asFile.toURI()
+                    name = "LisomGitHubPackages"
+                    url = uri("https://maven.pkg.github.com/anonymous-01-ghost/Lisom-Asistent")
+                    credentials {
+                        username = providers.gradleProperty("gpr.user")
+                            .orElse(providers.environmentVariable("GITHUB_ACTOR")).orNull
+                        password = providers.gradleProperty("gpr.key")
+                            .orElse(providers.environmentVariable("GITHUB_TOKEN")).orNull
+                    }
                 }
             }
         }
