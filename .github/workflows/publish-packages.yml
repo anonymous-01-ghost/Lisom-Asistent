@@ -29,18 +29,26 @@ jobs:
       - name: Ensure Gradle Wrapper is executable
         run: chmod +x ./gradlew
 
-      - name: Publish Android KMP modules and Sherpa runtime
+      - name: Publish Kotlin Multiplatform metadata and Android artifacts
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew --no-daemon \
+            :lisom-models:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-models:publishAndroidPublicationToLisomGitHubPackagesRepository \
+            :lisom-api:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-api:publishAndroidPublicationToLisomGitHubPackagesRepository \
+            :lisom-speech:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-speech:publishAndroidPublicationToLisomGitHubPackagesRepository \
+            :lisom-wakeword:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-wakeword:publishAndroidPublicationToLisomGitHubPackagesRepository \
+            :lisom-nlu:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-nlu:publishAndroidPublicationToLisomGitHubPackagesRepository \
+            :lisom-tts:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-tts:publishAndroidPublicationToLisomGitHubPackagesRepository \
+            :lisom-core:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-core:publishAndroidPublicationToLisomGitHubPackagesRepository \
+            :lisom-platform:publishKotlinMultiplatformPublicationToLisomGitHubPackagesRepository \
             :lisom-platform:publishAndroidPublicationToLisomGitHubPackagesRepository \
             :lisom-platform:publishSherpaAndroidPublicationToLisomGitHubPackagesRepository
