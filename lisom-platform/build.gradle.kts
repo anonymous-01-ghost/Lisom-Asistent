@@ -180,8 +180,7 @@ kotlin {
             api(project(":lisom-tts"))
         }
         androidMain.dependencies {
-            // Resolve Sherpa through the prepared Maven repository, not as a raw local AAR file.
-            compileOnly("dev.lisom.thirdparty:sherpa-onnx-android:$sherpaVersion")
+            compileOnly(files(sherpaAar))
         }
         jvmMain.dependencies {
             implementation(files(sherpaJvmJar, sherpaWindowsNativeJar))
