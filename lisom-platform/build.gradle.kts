@@ -1,6 +1,8 @@
 import java.net.URL
 import java.security.MessageDigest
 import java.util.zip.ZipFile
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -11,12 +13,8 @@ val sherpaVersion = "2.0.1"
 val thirdPartyRepository = rootProject.layout.buildDirectory.dir("repository")
 val sherpaAar = layout.buildDirectory.file("third-party/sherpa-onnx-2.0.1.aar")
 val sherpaJvmJar = layout.buildDirectory.file("third-party/sherpa-onnx-jvm-2.0.1.jar")
-val sherpaWindowsNativeJar = layout.buildDirectory.file(
-    "third-party/sherpa-onnx-native-lib-win-x64-2.0.1.jar",
-)
-val sherpaWindowsNativeDirectory = layout.buildDirectory.dir(
-    "third-party/sherpa-onnx-win-x64",
-)
+val sherpaWindowsNativeJar = layout.buildDirectory.file("third-party/sherpa-onnx-native-lib-win-x64-2.0.1.jar")
+val sherpaWindowsNativeDirectory = layout.buildDirectory.dir("third-party/sherpa-onnx-win-x64")
 val sherpaAndroidMavenDirectory = thirdPartyRepository.map {
     it.dir("dev/lisom/thirdparty/sherpa-onnx-android/$sherpaVersion")
 }
@@ -32,14 +30,12 @@ fun downloadAndVerify(url: String, target: java.io.File, expectedSha256: String)
     val validExisting = target.isFile &&
         MessageDigest.getInstance("SHA-256").digest(target.readBytes())
             .joinToString("") { "%02x".format(it) } == expectedSha256
-
     if (!validExisting) {
         target.delete()
         URL(url).openStream().use { input ->
             target.outputStream().use { output -> input.copyTo(output) }
         }
     }
-
     val actualSha256 = MessageDigest.getInstance("SHA-256").digest(target.readBytes())
         .joinToString("") { "%02x".format(it) }
     check(actualSha256 == expectedSha256) {
@@ -57,30 +53,20 @@ fun publishThirdPartyModule(
     dependencies: List<Pair<String, String>> = emptyList(),
 ) {
     moduleDirectory.mkdirs()
-    source.copyTo(
-        moduleDirectory.resolve(artifactId + "-" + version + "." + extension),
-        overwrite = true,
-    )
+    source.copyTo(moduleDirectory.resolve("$artifactId-$version.$extension"), overwrite = true)
     val dependencyXml = dependencies.joinToString("") { dependency ->
-        "<dependency>" +
-            "<groupId>" + dependency.first.substringBefore(':') + "</groupId>" +
-            "<artifactId>" + dependency.first.substringAfter(':') + "</artifactId>" +
-            "<version>" + dependency.second + "</version>" +
-            "</dependency>"
+        "<dependency><groupId>${dependency.first.substringBefore(':')}</groupId>" +
+            "<artifactId>${dependency.first.substringAfter(':')}</artifactId>" +
+            "<version>${dependency.second}</version></dependency>"
     }
     val pom = """<?xml version="1.0" encoding="UTF-8"?>""" +
         """<project xmlns="http://maven.apache.org/POM/4.0.0" """ +
         """xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" """ +
-        """xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 """ +
-        """https://maven.apache.org/xsd/maven-4.0.0.xsd">""" +
-        """<modelVersion>4.0.0</modelVersion>""" +
-        """<groupId>""" + groupId + """</groupId>""" +
-        """<artifactId>""" + artifactId + """</artifactId>""" +
-        """<version>""" + version + """</version>""" +
-        """<packaging>""" + extension + """</packaging>""" +
-        """<dependencies>""" + dependencyXml + """</dependencies>""" +
-        """</project>"""
-    moduleDirectory.resolve(artifactId + "-" + version + ".pom").writeText(pom)
+        """xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">""" +
+        """<modelVersion>4.0.0</modelVersion><groupId>$groupId</groupId>""" +
+        """<artifactId>$artifactId</artifactId><version>$version</version>""" +
+        """<packaging>$extension</packaging><dependencies>$dependencyXml</dependencies></project>"""
+    moduleDirectory.resolve("$artifactId-$version.pom").writeText(pom)
 }
 
 val downloadSherpaAar by tasks.registering {
@@ -108,13 +94,11 @@ val prepareSherpaWindowsNativeRuntime by tasks.registering {
             sherpaWindowsNativeJar.get().asFile,
             "536f1c09025996a780b22f972b2e56e0e8b2064e1ceb534456ea7eba0a6ae4cd",
         )
-
         val nativeDirectory = sherpaWindowsNativeDirectory.get().asFile
         nativeDirectory.deleteRecursively()
         nativeDirectory.mkdirs()
         val requiredLibraries = setOf("onnxruntime.dll", "sherpa-onnx-jni.dll")
         val extractedLibraries = mutableSetOf<String>()
-
         ZipFile(sherpaWindowsNativeJar.get().asFile).use { archive ->
             val entries = archive.entries()
             while (entries.hasMoreElements()) {
@@ -133,7 +117,6 @@ val prepareSherpaWindowsNativeRuntime by tasks.registering {
                 }
             }
         }
-
         check(extractedLibraries == requiredLibraries) {
             "Windows Sherpa runtime is incomplete. Found $extractedLibraries"
         }
@@ -145,12 +128,8 @@ val prepareSherpaAndroidMaven by tasks.registering {
     outputs.dir(sherpaAndroidMavenDirectory)
     doLast {
         publishThirdPartyModule(
-            source = sherpaAar.get().asFile,
-            moduleDirectory = sherpaAndroidMavenDirectory.get().asFile,
-            groupId = "dev.lisom.thirdparty",
-            artifactId = "sherpa-onnx-android",
-            version = sherpaVersion,
-            extension = "aar",
+            sherpaAar.get().asFile, sherpaAndroidMavenDirectory.get().asFile,
+            "dev.lisom.thirdparty", "sherpa-onnx-android", sherpaVersion, "aar",
         )
     }
 }
@@ -160,24 +139,26 @@ val prepareSherpaWindowsMaven by tasks.registering {
     outputs.dirs(sherpaJvmMavenDirectory, sherpaWindowsNativeMavenDirectory)
     doLast {
         publishThirdPartyModule(
-            source = sherpaWindowsNativeJar.get().asFile,
-            moduleDirectory = sherpaWindowsNativeMavenDirectory.get().asFile,
-            groupId = "dev.lisom.thirdparty",
-            artifactId = "sherpa-onnx-native-win-x64",
-            version = sherpaVersion,
-            extension = "jar",
+            sherpaWindowsNativeJar.get().asFile, sherpaWindowsNativeMavenDirectory.get().asFile,
+            "dev.lisom.thirdparty", "sherpa-onnx-native-win-x64", sherpaVersion, "jar",
         )
         publishThirdPartyModule(
-            source = sherpaJvmJar.get().asFile,
-            moduleDirectory = sherpaJvmMavenDirectory.get().asFile,
-            groupId = "dev.lisom.thirdparty",
-            artifactId = "sherpa-onnx-jvm",
-            version = sherpaVersion,
-            extension = "jar",
-            dependencies = listOf(
-                "dev.lisom.thirdparty:sherpa-onnx-native-win-x64" to sherpaVersion,
-            ),
+            sherpaJvmJar.get().asFile, sherpaJvmMavenDirectory.get().asFile,
+            "dev.lisom.thirdparty", "sherpa-onnx-jvm", sherpaVersion, "jar",
+            listOf("dev.lisom.thirdparty:sherpa-onnx-native-win-x64" to sherpaVersion),
         )
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("sherpaAndroid") {
+            groupId = "dev.lisom.thirdparty"
+            artifactId = "sherpa-onnx-android"
+            version = sherpaVersion
+            artifact(sherpaAar) { builtBy(downloadSherpaAar) }
+            pom { packaging = "aar" }
+        }
     }
 }
 
@@ -199,11 +180,9 @@ kotlin {
             api(project(":lisom-tts"))
         }
         androidMain.dependencies {
-            // Keep the third-party AAR separate; the host app adds it as a Maven dependency.
             compileOnly(files(sherpaAar))
         }
         jvmMain.dependencies {
-            // The host app adds the published Sherpa JVM/native artifacts to its runtime.
             implementation(files(sherpaJvmJar, sherpaWindowsNativeJar))
             implementation(libs.kotlinx.coroutines.core)
         }
