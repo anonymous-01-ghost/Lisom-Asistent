@@ -1,4 +1,4 @@
-name: Publish private Maven packages
+name: Publish private Android Maven packages
 
 on:
   push:
@@ -10,8 +10,9 @@ permissions:
   packages: write
 
 jobs:
-  publish:
+  publish-android:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Check out Lisom Assistant
         uses: actions/checkout@v4
@@ -25,8 +26,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Publish KMP modules and Sherpa Android artifact
+      - name: Publish Android KMP modules and Sherpa runtime
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew publish
+        run: |
+          ./gradlew             :lisom-models:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-api:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-speech:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-wakeword:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-nlu:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-tts:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-core:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-platform:publishAndroidPublicationToLisomGitHubPackagesRepository             :lisom-platform:publishSherpaAndroidPublicationToLisomGitHubPackagesRepository
